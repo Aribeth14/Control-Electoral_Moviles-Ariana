@@ -1,0 +1,7 @@
+{
+  "name": "Control Electoral",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
