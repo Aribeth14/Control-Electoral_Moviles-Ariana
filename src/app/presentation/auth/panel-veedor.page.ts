@@ -6,10 +6,11 @@ import {
   consultarAsignaciones,
   type JuntaAsignable,
 } from '../../core/infrastructure/asignaciones.repository';
+import { RegistrarActaComponent } from './registrar-acta.component';
 
 @Component({
   standalone: true,
-  imports: [IonButton, IonContent],
+  imports: [IonButton, IonContent, RegistrarActaComponent],
   template: `
     <ion-content class="ion-padding">
       <h1>Panel del veedor</h1>
@@ -21,7 +22,30 @@ import {
         @if (juntas().length > 0) {
           <ul>
             @for (junta of juntas(); track junta.numero) {
-              <li>Junta {{ junta.numero }}</li>
+              <li>
+                Junta {{ junta.numero }}
+
+                @if (juntaSeleccionada() === junta.numero) {
+                  <ion-button
+                    type="button"
+                    fill="outline"
+                    (click)="juntaSeleccionada.set(null)"
+                  >
+                    Cerrar formulario
+                  </ion-button>
+
+                  <app-registrar-acta
+                    [numeroJunta]="junta.numero"
+                  ></app-registrar-acta>
+                } @else {
+                  <ion-button
+                    type="button"
+                    (click)="juntaSeleccionada.set(junta.numero)"
+                  >
+                    Registrar acta
+                  </ion-button>
+                }
+              </li>
             }
           </ul>
         } @else {
@@ -50,12 +74,14 @@ export class PanelVeedorPage {
   readonly juntas = signal<JuntaAsignable[]>([]);
   readonly cargando = signal(true);
   readonly error = signal('');
+  readonly juntaSeleccionada = signal<number | null>(null);
 
   ionViewWillEnter(): Promise<void> {
     return this.cargar();
   }
 
   async cargar(): Promise<void> {
+    this.juntaSeleccionada.set(null);
     this.cargando.set(true);
     this.error.set('');
     this.juntas.set([]);
@@ -65,7 +91,9 @@ export class PanelVeedorPage {
       this.juntas.set(resultado.juntas);
     } catch (error) {
       this.error.set(
-        error instanceof Error ? error.message : 'No se pudieron cargar tus juntas.',
+        error instanceof Error
+          ? error.message
+          : 'No se pudieron cargar tus juntas.',
       );
     } finally {
       this.cargando.set(false);
@@ -78,7 +106,9 @@ export class PanelVeedorPage {
       await this.router.navigateByUrl('/login', { replaceUrl: true });
     } catch (error) {
       this.error.set(
-        error instanceof Error ? error.message : 'No se pudo cerrar la sesión.',
+        error instanceof Error
+          ? error.message
+          : 'No se pudo cerrar la sesión.',
       );
     }
   }
