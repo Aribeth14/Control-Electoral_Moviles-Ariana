@@ -8,6 +8,7 @@ import {
   type Junta,
   type Recinto,
 } from '../../core/infrastructure/recintos.repository';
+import { CrearCoordinadorComponent } from './crear-coordinador.component';
 
 @Component({
   standalone: true,
@@ -18,6 +19,7 @@ import {
     IonInput,
     IonSelect,
     IonSelectOption,
+    CrearCoordinadorComponent,
   ],
   template: `
     <ion-content class="ion-padding">
@@ -70,6 +72,7 @@ import {
           <p role="status">{{ confirmacion() }}</p>
         }
       </form>
+      <app-crear-coordinador [recintos]="recintos()"></app-crear-coordinador>
 
       <h2>Recintos registrados</h2>
 

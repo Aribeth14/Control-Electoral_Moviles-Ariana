@@ -1,8 +1,10 @@
 import { Injectable, signal } from '@angular/core';
 import {
+  activarCuenta,
   actualizarClave,
   autenticarConCedula,
   cargarPerfilDeSesion,
+  cerrarSesionActual,
 } from '../infrastructure/auth.gateway';
 
 type Perfil = Awaited<ReturnType<typeof autenticarConCedula>>;
@@ -13,7 +15,8 @@ export class AuthService {
   readonly perfil = this.perfilActual.asReadonly();
 
   async ingresar(cedula: string, password: string): Promise<void> {
-    this.perfilActual.set(await autenticarConCedula(cedula, password));
+    const perfil = await autenticarConCedula(cedula, password);
+    this.perfilActual.set(perfil);
   }
 
   async recuperarPerfil(): Promise<Perfil | null> {
@@ -24,5 +27,18 @@ export class AuthService {
 
   async cambiarClave(nuevaClave: string): Promise<void> {
     await actualizarClave(nuevaClave);
+  }
+
+  solicitarCodigoActivacion(): Promise<void> {
+    return activarCuenta({ accion: 'enviar' });
+  }
+
+  confirmarActivacion(codigo: string, clave: string): Promise<void> {
+    return activarCuenta({ accion: 'confirmar', codigo, clave });
+  }
+
+  async salir(): Promise<void> {
+    await cerrarSesionActual();
+    this.perfilActual.set(null);
   }
 }

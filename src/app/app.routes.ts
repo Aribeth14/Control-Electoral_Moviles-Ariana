@@ -1,8 +1,10 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router, Routes } from '@angular/router';
+import { Router, type CanActivateFn, type Routes } from '@angular/router';
 import { AuthService } from './core/application/auth.service';
 
-function protegerAcceso(destino: 'cambiar-clave' | 'provincial'): CanActivateFn {
+type RutaProtegida = 'cambiar-clave' | 'provincial' | 'activar-cuenta' | 'recinto';
+
+function protegerAcceso(destino: RutaProtegida): CanActivateFn {
   return async () => {
     const auth = inject(AuthService);
     const router = inject(Router);
@@ -10,21 +12,28 @@ function protegerAcceso(destino: 'cambiar-clave' | 'provincial'): CanActivateFn 
     try {
       const perfil = await auth.recuperarPerfil();
 
-      if (!perfil) return router.createUrlTree(['/login']);
-
-      if (perfil.debe_cambiar_clave) {
-        return destino === 'cambiar-clave'
-          ? true
-          : router.createUrlTree(['/cambiar-clave']);
+      if (!perfil) {
+        return router.createUrlTree(['/login']);
       }
 
-      if (destino === 'provincial') {
-        return perfil.rol === 'provincial'
-          ? true
-          : router.createUrlTree(['/login']);
+      let rutaPermitida: RutaProtegida;
+
+      if (perfil.rol === 'recinto' && perfil.recinto_id) {
+        rutaPermitida =
+          perfil.correo_verificado && !perfil.debe_cambiar_clave
+            ? 'recinto'
+            : 'activar-cuenta';
+      } else if (perfil.rol === 'provincial') {
+        rutaPermitida = perfil.debe_cambiar_clave
+          ? 'cambiar-clave'
+          : 'provincial';
+      } else {
+        return router.createUrlTree(['/login']);
       }
 
-      return router.createUrlTree([perfil.rol === 'provincial' ? '/provincial' : '/login']);
+      return destino === rutaPermitida
+        ? true
+        : router.createUrlTree([`/${rutaPermitida}`]);
     } catch {
       return router.createUrlTree(['/login']);
     }
@@ -39,6 +48,11 @@ export const routes: Routes = [
       import('./presentation/auth/login.page').then((m) => m.LoginPage),
   },
   {
+    path: 'recuperar-clave',
+    loadComponent: () =>
+      import('./presentation/auth/recuperar-clave.page').then((m) => m.RecuperarClavePage),
+  },
+  {
     path: 'cambiar-clave',
     canActivate: [protegerAcceso('cambiar-clave')],
     loadComponent: () =>
@@ -51,9 +65,15 @@ export const routes: Routes = [
       import('./presentation/auth/panel-provincial.page').then((m) => m.PanelProvincialPage),
   },
   {
-  path: 'recuperar-clave',
-  loadComponent: () =>
-    import('./presentation/auth/recuperar-clave.page')
-      .then((m) => m.RecuperarClavePage),
-},
+    path: 'activar-cuenta',
+    canActivate: [protegerAcceso('activar-cuenta')],
+    loadComponent: () =>
+      import('./presentation/auth/activar-cuenta.page').then((m) => m.ActivarCuentaPage),
+  },
+  {
+    path: 'recinto',
+    canActivate: [protegerAcceso('recinto')],
+    loadComponent: () =>
+      import('./presentation/auth/panel-recinto.page').then((m) => m.PanelRecintoPage),
+  },
 ];

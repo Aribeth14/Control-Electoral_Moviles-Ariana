@@ -1,7 +1,27 @@
-import { FunctionsHttpError } from '@supabase/supabase-js';
-import { supabase } from './supabase.client';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, FunctionsHttpError } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
+import { supabase } from './supabase.client';
+
+const supabaseRecuperacion = createClient(
+  environment.supabaseUrl,
+  environment.supabaseKey,
+  {
+    auth: {
+      storageKey: 'control-electoral-recuperacion',
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  },
+);
+
+async function consultarPerfil(usuarioId: string) {
+  return supabase
+    .from('perfiles')
+    .select('nombres, apellidos, rol, debe_cambiar_clave, correo_verificado, recinto_id')
+    .eq('id', usuarioId)
+    .single();
+}
 
 export async function autenticarConCedula(cedula: string, password: string) {
   const { data: tokens, error } = await supabase.functions.invoke<{
@@ -33,11 +53,9 @@ export async function autenticarConCedula(cedula: string, password: string) {
     throw new Error('No se pudo guardar la sesión.');
   }
 
-  const { data: perfil, error: errorPerfil } = await supabase
-    .from('perfiles')
-    .select('nombres, apellidos, rol, debe_cambiar_clave')
-    .eq('id', data.session.user.id)
-    .single();
+  const { data: perfil, error: errorPerfil } = await consultarPerfil(
+    data.session.user.id,
+  );
 
   if (errorPerfil || !perfil) {
     await supabase.auth.signOut({ scope: 'local' });
@@ -49,14 +67,18 @@ export async function autenticarConCedula(cedula: string, password: string) {
 
 export async function cargarPerfilDeSesion() {
   const { data, error } = await supabase.auth.getSession();
-  if (error) throw new Error('No se pudo recuperar la sesión.');
-  if (!data.session) return null;
 
-  const { data: perfil, error: errorPerfil } = await supabase
-    .from('perfiles')
-    .select('nombres, apellidos, rol, debe_cambiar_clave')
-    .eq('id', data.session.user.id)
-    .single();
+  if (error) {
+    throw new Error('No se pudo recuperar la sesión.');
+  }
+
+  if (!data.session) {
+    return null;
+  }
+
+  const { data: perfil, error: errorPerfil } = await consultarPerfil(
+    data.session.user.id,
+  );
 
   if (errorPerfil || !perfil) {
     throw new Error('No se pudo cargar tu perfil.');
@@ -68,26 +90,14 @@ export async function cargarPerfilDeSesion() {
 export async function actualizarClave(nuevaClave: string): Promise<void> {
   const { error } = await supabase.auth.updateUser({ password: nuevaClave });
 
-  if (error) {
-    if (error.code === 'same_password') {
-      throw new Error('Elige una contraseña diferente a la actual.');
-    }
+  if (error?.code === 'same_password') {
+    throw new Error('Elige una contraseña diferente a la actual.');
+  }
 
+  if (error) {
     throw new Error(error.message || 'No se pudo cambiar la contraseña.');
   }
 }
-const supabaseRecuperacion = createClient(
-  environment.supabaseUrl,
-  environment.supabaseKey,
-  {
-    auth: {
-      storageKey: 'control-electoral-recuperacion',
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  },
-);
 
 export async function solicitarCodigoRecuperacion(correo: string): Promise<void> {
   const { error } = await supabaseRecuperacion.auth.resetPasswordForEmail(correo);
@@ -132,4 +142,32 @@ export async function guardarClaveRecuperada(clave: string): Promise<void> {
   await supabaseRecuperacion.auth.signOut({ scope: 'local' });
 }
 
+export async function activarCuenta(
+  datos:
+    | { accion: 'enviar' }
+    | { accion: 'confirmar'; codigo: string; clave: string },
+): Promise<void> {
+  const { error } = await supabase.functions.invoke('activar-cuenta', {
+    body: datos,
+  });
 
+  if (error instanceof FunctionsHttpError) {
+    const cuerpo = await error.context.json().catch(() => null);
+
+    if (typeof cuerpo?.error === 'string') {
+      throw new Error(cuerpo.error);
+    }
+  }
+
+  if (error) {
+    throw new Error('No se pudo completar la solicitud. Intenta de nuevo.');
+  }
+}
+
+export async function cerrarSesionActual(): Promise<void> {
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
+
+  if (error) {
+    throw new Error('No se pudo cerrar la sesión. Recarga la app.');
+  }
+}

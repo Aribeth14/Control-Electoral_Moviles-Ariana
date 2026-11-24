@@ -10,7 +10,17 @@
     <p>{{ usuario.nombres }} {{ usuario.apellidos }}</p>
     <p>Rol: {{ usuario.rol }}</p>
 
-    @if (usuario.debe_cambiar_clave) {
+    @if (usuario.rol === 'recinto') {
+      @if (!usuario.correo_verificado || usuario.debe_cambiar_clave) {
+        <ion-button type="button" routerLink="/activar-cuenta">
+          Activar cuenta
+        </ion-button>
+      } @else {
+        <ion-button type="button" routerLink="/recinto">
+          Ir a mi recinto
+        </ion-button>
+      }
+    } @else if (usuario.debe_cambiar_clave) {
       <p>Debes cambiar tu contraseña antes de continuar.</p>
     }
   } @else {
@@ -43,15 +53,15 @@
         <p>Ingresa tu contraseña.</p>
       }
 
-      @if (mensajeError()) {
-        <p role="alert">{{ mensajeError() }}</p>
-      }
-
       <ion-button expand="block" type="submit" [disabled]="cargando()">
         {{ cargando() ? 'Verificando…' : 'Ingresar' }}
       </ion-button>
     </form>
+
     <a routerLink="/recuperar-clave">¿Olvidaste tu contraseña?</a>
   }
-</ion-content>
 
+  @if (mensajeError()) {
+    <p role="alert">{{ mensajeError() }}</p>
+  }
+</ion-content>
