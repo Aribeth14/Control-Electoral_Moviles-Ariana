@@ -1,90 +1,51 @@
-# ADR-006: Validar formularios con Reactive Forms y validadores propios
+# ADR-006: Validar formularios con Reactive Forms y reglas de dominio reutilizables
 
-#### Estado
+## Estado
 
-Aceptado
+Aceptado.
 
-#### Fecha
+## Fecha
 
-2026-11-22
+22 de noviembre de 2026.
 
-#### Autor(es) y equipo
+## Requisitos relacionados
 
-Grupo 4: Amy Mishell Díaz Rosero, Josselyn Mabel Reyes Parrales, Ariana Elizabeth Villota Jácome
+R2, R3, R6 y R9 (cédula ecuatoriana y datos de contacto, cambio de contraseña, consistencia de los totales del acta y estados de validación).
 
-#### Requisitos relacionados
+## Contexto
 
-R2: cédula ecuatoriana validada, nombres, apellidos, teléfono y correo.
+La app tiene formularios con muchas reglas: cédula ecuatoriana, teléfono, correo, contraseñas y, sobre todo, el acta, donde los votos de las organizaciones más nulos y blancos deben coincidir con el total de sufragantes. Necesitamos poder probar esas reglas, mostrar errores claros y repetir las críticas en el servidor (ADR-002).
 
-R3: cambio obligatorio de contraseña.
+## Alternativas consideradas
 
-R6: validar la consistencia de los totales del acta.
+| Alternativa | Ventajas en este proyecto | Desventajas en este proyecto |
+|---|---|---|
+| **Reactive Forms** | Los validadores son funciones fáciles de probar, se pueden tipar y controlan bien un formulario grande como el del acta. | Más código en cada componente. |
+| **Template-driven forms (ngModel)** | Rápidos de escribir para formularios pequeños. | Las validaciones propias, como la suma del acta, son más difíciles de escribir y probar. |
 
-R9: estados explícitos de validación.
+## Decisión
 
-#### Contexto
+Usamos Reactive Forms tipados (`FormBuilder.nonNullable`). Las reglas son funciones puras en `core/domain/rules/` y los validadores de Angular en `presentation/shared/validators/` solo las envuelven (ADR-004):
 
-La app tiene formularios con muchas reglas: cédula ecuatoriana, teléfono, correo, contraseñas y, sobre todo, el acta, donde los votos deben coincidir con el total de sufragantes. Las validaciones deben poder probarse. Criterios: soporte para validaciones propias, facilidad de pruebas y claridad de los errores para el usuario.
+- **Cédula:** 10 dígitos, provincia entre 01 y 24 (o 30, ecuatorianos en el exterior), tercer dígito menor que 6 y dígito verificador con el algoritmo módulo 10. Además, la cédula es única en la base.
+- **Acta:** votos de las 5 organizaciones + nulos + blancos = total de sufragantes, sin negativos ni decimales. Es un validador de `FormGroup` porque compara varios campos, y la misma regla se vuelve a comprobar en `registrar_acta`.
+- **Teléfono:** 10 dígitos que empiezan con 09. **Correo:** formato válido.
+- **Contraseña nueva:** mínimo 8 caracteres, distinta de `Ecuador2026` y con confirmación igual. Configuramos el mismo mínimo en el panel de Auth de Supabase.
+- Mostramos los errores debajo de cada campo tocado y desactivamos el botón de guardar mientras el formulario no sea válido o se esté guardando.
 
-#### Alternativas consideradas
+## Consecuencias
 
-| Alternativa | Ventajas | Desventajas |
-| --- | --- | --- |
-| Reactive Forms | Validadores propios como funciones; fáciles de probar; buen control de formularios grandes | Más código en el componente |
-| Template-driven forms (ngModel) | Rápidos para formularios pequeños | Validaciones propias más difíciles de escribir y probar |
+- Ganamos reglas centralizadas, reutilizables y probadas sin Angular.
+- Perdemos brevedad: cada componente de formulario tiene más código.
+- **Obligación:** mantener el mismo largo mínimo de contraseña en la app y en Supabase.
+- **Riesgo:** un validador mal escrito podría rechazar cédulas válidas o aceptar actas inconsistentes; lo segundo igual lo frena el servidor.
 
-#### Decisión
+## Verificación
 
-Se usan Reactive Forms con validadores en core/domain/validators/:
+- Pruebas unitarias con cédulas válidas, con dígito verificador incorrecto, con provincia inválida y con letras.
+- Un acta cuyos votos no suman el total no se puede guardar.
+- La contraseña `Ecuador2026` se rechaza como contraseña nueva.
 
-Cédula ecuatoriana: 10 dígitos, provincia entre 01 y 24 (o 30), tercer dígito menor que 6 y dígito verificador con el algoritmo módulo 10.
+## Uso de IA
 
-Acta: votos de las 5 organizaciones + nulos + blancos = total de sufragantes; ningún valor negativo.
-
-Teléfono: 10 dígitos. Correo: formato válido.
-
-Contraseña nueva: largo mínimo y confirmación igual.
-
-Los errores se muestran debajo de cada campo y el botón de guardar se desactiva mientras el formulario no sea válido.
-
-#### Consecuencias
-
-Beneficios: reglas centralizadas y reutilizables, con evidencia en pruebas unitarias.
-
-Obligaciones: mantener los validadores en una carpeta propia y probarlos.
-
-Limitaciones: más código en cada componente de formulario.
-
-Riesgo: un validador mal escrito podría rechazar cédulas válidas o aceptar actas inconsistentes.
-
-#### Verificación
-
-Pruebas unitarias con cédulas válidas, con dígito verificador incorrecto y con letras; un acta cuyos votos no suman el total no se puede guardar (ver ADR-010).
-
-#### Uso de IA
-
-Herramienta: Claude (Anthropic).
-
-Consulta realizada: comparar Reactive Forms y Template-driven forms; describir el algoritmo de validación de cédula ecuatoriana.
-
-Respuesta sugerida: Reactive Forms con validadores propios para cédula y suma de votos.
-
-Aceptación/rechazo: aceptada.
-
-Verificación humana: [completar; por ejemplo, probar el algoritmo con cédulas reales]
-
-#### Trazabilidad
-
-Commit del ADR: [enlace]
-
-Commit de implementación: [enlace]
-
-#### Consenso del equipo
-
-Argumentos por integrante: Amy: [completar] · Josselyn: [completar] · Ariana: [completar]
-
-Objeciones: se propusieron los Template-driven forms por ser más rápidos de escribir.
-
-Acuerdo final: Reactive Forms, porque el formulario del acta tiene muchos campos y validaciones propias que deben probarse.
-
-Minuto del video: [mm:ss]
+Le pedimos a Claude comparar Reactive Forms y Template-driven forms y describir el algoritmo de validación de la cédula ecuatoriana. Recomendó Reactive Forms con validadores propios para la cédula y la suma de votos, y lo aceptamos; en la reunión se planteó usar Template-driven por ser más rápidos de escribir, pero el formulario del acta tiene demasiadas reglas propias. Comprobamos el algoritmo con cédulas reales del equipo: [completar]. Más tarde aceptamos su sugerencia de usar formularios tipados y separar las reglas puras de los validadores de Angular.
