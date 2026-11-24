@@ -1,10 +1,15 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { registrarActa } from '../../core/infrastructure/actas.repository';
 import {
   listarCandidaturas,
   type Dignidad,
 } from '../../core/infrastructure/candidaturas.repository';
+import {
+  obtenerUbicacionActa,
+  tomarFotoActa,
+  type FotoActa,
+} from '../../core/infrastructure/evidencia-acta';
 
 interface CandidaturaActa {
   id: number;
@@ -22,7 +27,7 @@ interface CandidaturaActa {
     <select
       id="dignidad-acta"
       #selector
-      [disabled]="cargando() || guardando()"
+      [disabled]="ocupado()"
       (change)="elegirDignidad(selector.value)"
     >
       <option value="">Selecciona una dignidad</option>
@@ -41,7 +46,7 @@ interface CandidaturaActa {
         (input)="limpiarMensajes()"
         novalidate
       >
-        <fieldset [disabled]="guardando()">
+        <fieldset [disabled]="ocupado()">
           <legend>Votos y total de sufragantes</legend>
 
           <div formArrayName="votos">
@@ -98,9 +103,62 @@ interface CandidaturaActa {
             />
           </p>
 
-          <button type="submit">
-            {{ guardando() ? 'Guardando…' : 'Guardar acta' }}
-          </button>
+          <h3>Foto del acta</h3>
+          <p>
+            <button type="button" (click)="tomarFoto()">
+              {{ foto() ? 'Volver a tomar foto' : 'Tomar foto' }}
+            </button>
+          </p>
+
+          @if (tomandoFoto()) {
+            <p role="status">Tomando foto y comprobando la nitidez…</p>
+          }
+
+          @if (errorFoto()) {
+            <p role="alert">{{ errorFoto() }}</p>
+          }
+
+          @if (foto(); as evidencia) {
+            <p>Foto aceptada. Nitidez: {{ evidencia.nitidez.toFixed(1) }}</p>
+            <img
+              [src]="evidencia.ruta"
+              alt="Vista previa del acta aceptada"
+              width="240"
+            />
+          }
+
+          <h3>Ubicación del acta</h3>
+          <p>
+            <button type="button" (click)="obtenerUbicacion()">
+              {{ ubicacion() ? 'Actualizar ubicación' : 'Obtener ubicación' }}
+            </button>
+          </p>
+
+          @if (obteniendoUbicacion()) {
+            <p role="status">Obteniendo ubicación…</p>
+          }
+
+          @if (errorUbicacion()) {
+            <p role="alert">{{ errorUbicacion() }}</p>
+          }
+
+          @if (ubicacion(); as gps) {
+            <p role="status">
+              Latitud {{ gps.latitud.toFixed(6) }} ·
+              Longitud {{ gps.longitud.toFixed(6) }} ·
+              Precisión {{ gps.precision.toFixed(0) }} m
+            </p>
+
+            @if (gps.precision > 50) {
+              <p>La precisión supera los 50 m. Puedes volver a obtener la ubicación.</p>
+            }
+          }
+
+          <p>
+            <button type="submit">
+              {{ guardando() ? 'Guardando…' : 'Guardar acta' }}
+            </button>
+          </p>
         </fieldset>
       </form>
     }
@@ -130,6 +188,24 @@ export class RegistrarActaComponent {
   readonly error = signal('');
   readonly mensaje = signal('');
 
+  readonly foto = signal<FotoActa | null>(null);
+  readonly tomandoFoto = signal(false);
+  readonly errorFoto = signal('');
+
+  readonly ubicacion = signal<
+    Awaited<ReturnType<typeof obtenerUbicacionActa>> | null
+  >(null);
+  readonly obteniendoUbicacion = signal(false);
+  readonly errorUbicacion = signal('');
+
+  readonly ocupado = computed(
+    () =>
+      this.cargando() ||
+      this.guardando() ||
+      this.tomandoFoto() ||
+      this.obteniendoUbicacion(),
+  );
+
   readonly form = this.fb.group({
     votos: this.fb.array(
       Array.from({ length: 5 }, () =>
@@ -142,12 +218,16 @@ export class RegistrarActaComponent {
   });
 
   async elegirDignidad(valor: string): Promise<void> {
-    if (this.cargando() || this.guardando()) return;
+    if (this.ocupado()) return;
 
     this.limpiarMensajes();
     this.dignidad.set(null);
     this.candidaturas.set([]);
     this.form.reset();
+    this.foto.set(null);
+    this.errorFoto.set('');
+    this.ubicacion.set(null);
+    this.errorUbicacion.set('');
 
     if (valor !== 'alcaldia' && valor !== 'prefectura') return;
 
@@ -172,8 +252,48 @@ export class RegistrarActaComponent {
     }
   }
 
+  async tomarFoto(): Promise<void> {
+    if (this.ocupado()) return;
+
+    this.tomandoFoto.set(true);
+    this.errorFoto.set('');
+    this.foto.set(null);
+
+    try {
+      this.foto.set(await tomarFotoActa());
+    } catch (error) {
+      this.errorFoto.set(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo tomar la foto. Intenta de nuevo.',
+      );
+    } finally {
+      this.tomandoFoto.set(false);
+    }
+  }
+
+  async obtenerUbicacion(): Promise<void> {
+    if (this.ocupado()) return;
+
+    this.obteniendoUbicacion.set(true);
+    this.errorUbicacion.set('');
+    this.ubicacion.set(null);
+
+    try {
+      this.ubicacion.set(await obtenerUbicacionActa());
+    } catch (error) {
+      this.errorUbicacion.set(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo obtener la ubicación. Intenta de nuevo.',
+      );
+    } finally {
+      this.obteniendoUbicacion.set(false);
+    }
+  }
+
   async guardarActa(): Promise<void> {
-    if (this.cargando() || this.guardando()) return;
+    if (this.ocupado()) return;
 
     this.limpiarMensajes();
     this.form.markAllAsTouched();
@@ -229,7 +349,7 @@ export class RegistrarActaComponent {
       });
 
       this.form.reset();
-      this.mensaje.set('Acta guardada correctamente.');
+      this.mensaje.set('Votos guardados correctamente.');
     } catch (error) {
       this.error.set(
         error instanceof Error ? error.message : 'No se pudo guardar el acta.',
