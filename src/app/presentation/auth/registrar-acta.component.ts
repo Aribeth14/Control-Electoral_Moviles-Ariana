@@ -223,11 +223,7 @@ export class RegistrarActaComponent {
     this.limpiarMensajes();
     this.dignidad.set(null);
     this.candidaturas.set([]);
-    this.form.reset();
-    this.foto.set(null);
-    this.errorFoto.set('');
-    this.ubicacion.set(null);
-    this.errorUbicacion.set('');
+    this.reiniciarDatosActa();
 
     if (valor !== 'alcaldia' && valor !== 'prefectura') return;
 
@@ -255,6 +251,7 @@ export class RegistrarActaComponent {
   async tomarFoto(): Promise<void> {
     if (this.ocupado()) return;
 
+    this.limpiarMensajes();
     this.tomandoFoto.set(true);
     this.errorFoto.set('');
     this.foto.set(null);
@@ -275,6 +272,7 @@ export class RegistrarActaComponent {
   async obtenerUbicacion(): Promise<void> {
     if (this.ocupado()) return;
 
+    this.limpiarMensajes();
     this.obteniendoUbicacion.set(true);
     this.errorUbicacion.set('');
     this.ubicacion.set(null);
@@ -333,6 +331,14 @@ export class RegistrarActaComponent {
       return;
     }
 
+    const foto = this.foto();
+    const ubicacion = this.ubicacion();
+
+    if (!foto || !ubicacion) {
+      this.error.set('Toma una foto nítida y obtén la ubicación antes de guardar.');
+      return;
+    }
+
     this.guardando.set(true);
 
     try {
@@ -342,14 +348,16 @@ export class RegistrarActaComponent {
         blancos,
         nulos,
         sufragantes,
+        foto,
+        ubicacion,
         votos: candidaturas.map((candidatura, indice) => ({
           candidatura_id: candidatura.id,
           votos: votosValidos[indice],
         })),
       });
 
-      this.form.reset();
-      this.mensaje.set('Votos guardados correctamente.');
+      this.reiniciarDatosActa();
+      this.mensaje.set('Acta guardada con votos, foto y ubicación.');
     } catch (error) {
       this.error.set(
         error instanceof Error ? error.message : 'No se pudo guardar el acta.',
@@ -362,5 +370,13 @@ export class RegistrarActaComponent {
   limpiarMensajes(): void {
     this.error.set('');
     this.mensaje.set('');
+  }
+
+  private reiniciarDatosActa(): void {
+    this.form.reset();
+    this.foto.set(null);
+    this.errorFoto.set('');
+    this.ubicacion.set(null);
+    this.errorUbicacion.set('');
   }
 }
