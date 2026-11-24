@@ -15,7 +15,7 @@ import { crearCoordinador } from '../../core/infrastructure/usuarios.repository'
     IonSelectOption,
   ],
   template: `
-    <h2>Crear coordinador de recinto</h2>
+    <h2>Crear {{ tipo() === 'veedor' ? 'veedor' : 'coordinador de recinto' }}</h2>
 
     <form [formGroup]="form" (ngSubmit)="guardar()">
       <ion-select
@@ -73,7 +73,7 @@ import { crearCoordinador } from '../../core/infrastructure/usuarios.repository'
         expand="block"
         [disabled]="guardando() || recintos().length === 0"
       >
-        {{ guardando() ? 'Creando cuenta…' : 'Crear coordinador' }}
+        {{ guardando() ? 'Creando cuenta…' : 'Crear ' + tipo() }}
       </ion-button>
 
       @if (error()) {
@@ -90,6 +90,8 @@ export class CrearCoordinadorComponent {
   private readonly fb = inject(FormBuilder);
 
   readonly recintos = input.required<readonly Recinto[]>();
+  readonly tipo = input<'coordinador' | 'veedor'>('coordinador');
+
   readonly guardando = signal(false);
   readonly error = signal('');
   readonly mensaje = signal('');
@@ -98,8 +100,8 @@ export class CrearCoordinadorComponent {
     recinto_id: ['', Validators.required],
     nombres: ['', Validators.required],
     apellidos: ['', Validators.required],
-    cedula: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
-    telefono: ['', [Validators.required, Validators.pattern(/^09\d{8}$/)]],
+    cedula: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+    telefono: ['', [Validators.required, Validators.pattern(/^09[0-9]{8}$/)]],
     correo: ['', [Validators.required, Validators.email]],
   });
 
@@ -108,6 +110,7 @@ export class CrearCoordinadorComponent {
 
     this.error.set('');
     this.mensaje.set('');
+    this.form.markAllAsTouched();
 
     const datos = this.form.getRawValue();
     const nombres = datos.nombres.trim();
@@ -117,6 +120,11 @@ export class CrearCoordinadorComponent {
       this.error.set(
         'Selecciona un recinto y completa los datos. Usa 10 dígitos para la cédula y un celular que empiece en 09.',
       );
+      return;
+    }
+
+    if (!this.recintos().some((recinto) => recinto.id === datos.recinto_id)) {
+      this.error.set('Selecciona un recinto de la lista.');
       return;
     }
 
@@ -134,7 +142,7 @@ export class CrearCoordinadorComponent {
       this.mensaje.set(resultado.mensaje);
     } catch (error) {
       this.error.set(
-        error instanceof Error ? error.message : 'No se pudo crear el coordinador.',
+        error instanceof Error ? error.message : 'No se pudo crear la cuenta.',
       );
     } finally {
       this.guardando.set(false);

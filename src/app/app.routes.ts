@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Router, type CanActivateFn, type Routes } from '@angular/router';
 import { AuthService } from './core/application/auth.service';
 
-type RutaProtegida = 'cambiar-clave' | 'provincial' | 'activar-cuenta' | 'recinto';
+type RutaProtegida = 'cambiar-clave' | 'provincial' | 'activar-cuenta' | 'recinto' |'veedor';
 
 function protegerAcceso(destino: RutaProtegida): CanActivateFn {
   return async () => {
@@ -18,15 +18,14 @@ function protegerAcceso(destino: RutaProtegida): CanActivateFn {
 
       let rutaPermitida: RutaProtegida;
 
-      if (perfil.rol === 'recinto' && perfil.recinto_id) {
-        rutaPermitida =
-          perfil.correo_verificado && !perfil.debe_cambiar_clave
-            ? 'recinto'
-            : 'activar-cuenta';
-      } else if (perfil.rol === 'provincial') {
-        rutaPermitida = perfil.debe_cambiar_clave
-          ? 'cambiar-clave'
-          : 'provincial';
+      if (perfil.rol === 'provincial') {
+        rutaPermitida = perfil.debe_cambiar_clave ? 'cambiar-clave' : 'provincial';
+      } else if (
+        (perfil.rol === 'recinto' || perfil.rol === 'veedor') &&
+        perfil.recinto_id
+      ) {
+        const cuentaActiva = perfil.correo_verificado && !perfil.debe_cambiar_clave;
+        rutaPermitida = cuentaActiva ? perfil.rol : 'activar-cuenta';
       } else {
         return router.createUrlTree(['/login']);
       }
@@ -75,5 +74,11 @@ export const routes: Routes = [
     canActivate: [protegerAcceso('recinto')],
     loadComponent: () =>
       import('./presentation/auth/panel-recinto.page').then((m) => m.PanelRecintoPage),
+  },
+  {
+    path: 'veedor',
+    canActivate: [protegerAcceso('veedor')],
+    loadComponent: () =>
+      import('./presentation/auth/panel-veedor.page').then((m) => m.PanelVeedorPage),
   },
 ];

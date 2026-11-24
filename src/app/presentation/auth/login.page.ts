@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router,RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {IonButton,IonContent,IonHeader,IonInput,IonTitle,IonToolbar,} from '@ionic/angular';
 import { AuthService } from '../../core/application/auth.service';
 
@@ -50,11 +50,28 @@ export class LoginPage {
 
       const perfil = this.perfil();
 
-      if (perfil?.debe_cambiar_clave) {
-        await this.router.navigateByUrl('/cambiar-clave', { replaceUrl: true });
-      } else if (perfil?.rol === 'provincial') {
-        await this.router.navigateByUrl('/provincial', { replaceUrl: true });
+      if (!perfil) {
+        throw new Error('No se pudo cargar tu perfil.');
       }
+
+      let destino: string;
+
+      if (perfil.rol === 'provincial') {
+        destino = perfil.debe_cambiar_clave ? '/cambiar-clave' : '/provincial';
+      } else if (perfil.rol === 'recinto' || perfil.rol === 'veedor') {
+        if (!perfil.recinto_id) {
+          throw new Error('Tu cuenta no tiene un recinto asignado.');
+        }
+
+        const cuentaActiva =
+          perfil.correo_verificado && !perfil.debe_cambiar_clave;
+
+        destino = cuentaActiva ? `/${perfil.rol}` : '/activar-cuenta';
+      } else {
+        throw new Error('Tu cuenta no tiene un rol habilitado.');
+      }
+
+      await this.router.navigateByUrl(destino, { replaceUrl: true });
     } catch (error) {
       this.mensajeError.set(
         error instanceof Error ? error.message : 'No se pudo iniciar sesión.',

@@ -5,23 +5,43 @@
 </ion-header>
 
 <ion-content class="ion-padding">
+  @if (mensajeError()) {
+    <p role="alert">{{ mensajeError() }}</p>
+  }
+
   @if (perfil(); as usuario) {
     <h1>Sesión iniciada</h1>
     <p>{{ usuario.nombres }} {{ usuario.apellidos }}</p>
     <p>Rol: {{ usuario.rol }}</p>
 
-    @if (usuario.rol === 'recinto') {
-      @if (!usuario.correo_verificado || usuario.debe_cambiar_clave) {
+    @if (usuario.rol === 'recinto' || usuario.rol === 'veedor') {
+      @if (!usuario.recinto_id) {
+        @if (!mensajeError()) {
+          <p role="alert">Tu cuenta no tiene un recinto asignado.</p>
+        }
+      } @else if (!usuario.correo_verificado || usuario.debe_cambiar_clave) {
         <ion-button type="button" routerLink="/activar-cuenta">
           Activar cuenta
         </ion-button>
-      } @else {
+      } @else if (usuario.rol === 'recinto') {
         <ion-button type="button" routerLink="/recinto">
           Ir a mi recinto
         </ion-button>
+      } @else {
+        <ion-button type="button" routerLink="/veedor">
+          Ir al panel de veedor
+        </ion-button>
       }
-    } @else if (usuario.debe_cambiar_clave) {
-      <p>Debes cambiar tu contraseña antes de continuar.</p>
+    } @else if (usuario.rol === 'provincial') {
+      @if (usuario.debe_cambiar_clave) {
+        <ion-button type="button" routerLink="/cambiar-clave">
+          Cambiar contraseña
+        </ion-button>
+      } @else {
+        <ion-button type="button" routerLink="/provincial">
+          Ir al panel provincial
+        </ion-button>
+      }
     }
   } @else {
     <h1>Ingreso por cédula</h1>
@@ -59,9 +79,5 @@
     </form>
 
     <a routerLink="/recuperar-clave">¿Olvidaste tu contraseña?</a>
-  }
-
-  @if (mensajeError()) {
-    <p role="alert">{{ mensajeError() }}</p>
   }
 </ion-content>
