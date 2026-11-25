@@ -1,16 +1,27 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonButton, IonContent } from '@ionic/angular';
 import { AuthService } from '../../core/application/auth.service';
 import {
+  consultarDetalleActaRecinto,
+  type DetalleActaRecinto,
+} from '../../core/infrastructure/actas.repository';
+import {
   consultarAsignaciones,
   type JuntaAsignable,
 } from '../../core/infrastructure/asignaciones.repository';
+import type { Dignidad } from '../../core/infrastructure/candidaturas.repository';
+import { CorregirActaComponent } from './corregir-acta.component';
 import { RegistrarActaComponent } from './registrar-acta.component';
 
 @Component({
   standalone: true,
-  imports: [IonButton, IonContent, RegistrarActaComponent],
+  imports: [
+    IonButton,
+    IonContent,
+    RegistrarActaComponent,
+    CorregirActaComponent,
+  ],
   template: `
     <ion-content class="ion-padding">
       <h1>Panel del veedor</h1>
@@ -23,9 +34,21 @@ import { RegistrarActaComponent } from './registrar-acta.component';
           <ul>
             @for (junta of juntas(); track junta.numero) {
               <li>
-                Junta {{ junta.numero }}
+                <strong>Junta {{ junta.numero }}</strong>
 
-                @if (juntaSeleccionada() === junta.numero) {
+                @if (actaParaCorregir(); as acta) {
+                  @if (acta.numero === junta.numero) {
+                    <h3>
+                      {{ acta.dignidad === 'alcaldia' ? 'Alcaldía' : 'Prefectura' }}
+                    </h3>
+
+                    <app-corregir-acta
+                      [acta]="acta"
+                      (guardada)="finalizarCorreccion()"
+                      (cancelada)="actaParaCorregir.set(null)"
+                    ></app-corregir-acta>
+                  }
+                } @else if (juntaSeleccionada() === junta.numero) {
                   <ion-button
                     type="button"
                     fill="outline"
@@ -40,9 +63,28 @@ import { RegistrarActaComponent } from './registrar-acta.component';
                 } @else {
                   <ion-button
                     type="button"
+                    [disabled]="consultandoActa()"
                     (click)="juntaSeleccionada.set(junta.numero)"
                   >
                     Registrar acta
+                  </ion-button>
+
+                  <ion-button
+                    type="button"
+                    fill="outline"
+                    [disabled]="consultandoActa()"
+                    (click)="abrirCorreccion(junta.numero, 'alcaldia')"
+                  >
+                    Corregir Alcaldía
+                  </ion-button>
+
+                  <ion-button
+                    type="button"
+                    fill="outline"
+                    [disabled]="consultandoActa()"
+                    (click)="abrirCorreccion(junta.numero, 'prefectura')"
+                  >
+                    Corregir Prefectura
                   </ion-button>
                 }
               </li>
@@ -57,11 +99,32 @@ import { RegistrarActaComponent } from './registrar-acta.component';
         <p role="alert">{{ error() }}</p>
       }
 
-      <ion-button type="button" [disabled]="cargando()" (click)="cargar()">
+      @if (consultandoActa()) {
+        <p role="status">Consultando acta…</p>
+      }
+
+      @if (errorCorreccion()) {
+        <p role="alert">{{ errorCorreccion() }}</p>
+      }
+
+      @if (mensajeCorreccion()) {
+        <p role="status">{{ mensajeCorreccion() }}</p>
+      }
+
+      <ion-button
+        type="button"
+        [disabled]="cargando() || correccionEnCurso()"
+        (click)="cargar()"
+      >
         Actualizar
       </ion-button>
 
-      <ion-button type="button" fill="outline" (click)="salir()">
+      <ion-button
+        type="button"
+        fill="outline"
+        [disabled]="cargando() || correccionEnCurso()"
+        (click)="salir()"
+      >
         Cerrar sesión
       </ion-button>
     </ion-content>
@@ -76,12 +139,25 @@ export class PanelVeedorPage {
   readonly error = signal('');
   readonly juntaSeleccionada = signal<number | null>(null);
 
+  readonly actaParaCorregir = signal<DetalleActaRecinto | null>(null);
+  readonly consultandoActa = signal(false);
+  readonly errorCorreccion = signal('');
+  readonly mensajeCorreccion = signal('');
+
+  readonly correccionEnCurso = computed(
+    () => this.consultandoActa() || this.actaParaCorregir() !== null,
+  );
+
   ionViewWillEnter(): Promise<void> {
     return this.cargar();
   }
 
   async cargar(): Promise<void> {
+    if (this.correccionEnCurso()) return;
+
     this.juntaSeleccionada.set(null);
+    this.errorCorreccion.set('');
+    this.mensajeCorreccion.set('');
     this.cargando.set(true);
     this.error.set('');
     this.juntas.set([]);
@@ -100,7 +176,34 @@ export class PanelVeedorPage {
     }
   }
 
+  async abrirCorreccion(numero: number, dignidad: Dignidad): Promise<void> {
+    if (this.cargando() || this.correccionEnCurso()) return;
+
+    this.juntaSeleccionada.set(null);
+    this.errorCorreccion.set('');
+    this.mensajeCorreccion.set('');
+    this.consultandoActa.set(true);
+
+    try {
+      const acta = await consultarDetalleActaRecinto(numero, dignidad);
+      this.actaParaCorregir.set(acta);
+    } catch (error) {
+      this.errorCorreccion.set(
+        error instanceof Error ? error.message : 'No se pudo abrir el acta.',
+      );
+    } finally {
+      this.consultandoActa.set(false);
+    }
+  }
+
+  finalizarCorreccion(): void {
+    this.actaParaCorregir.set(null);
+    this.mensajeCorreccion.set('Corrección guardada.');
+  }
+
   async salir(): Promise<void> {
+    if (this.cargando() || this.correccionEnCurso()) return;
+
     try {
       await this.auth.salir();
       await this.router.navigateByUrl('/login', { replaceUrl: true });

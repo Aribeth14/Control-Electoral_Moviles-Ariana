@@ -1,6 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import {IonButton,IonContent,IonInput,IonSelect,IonSelectOption,} from '@ionic/angular';
+import {
+  IonButton,
+  IonContent,
+  IonInput,
+  IonSelect,
+  IonSelectOption,
+} from '@ionic/angular';
 import {
   listarJuntas,
   listarRecintos,
@@ -9,6 +15,7 @@ import {
   type Recinto,
 } from '../../core/infrastructure/recintos.repository';
 import { CrearCoordinadorComponent } from './crear-coordinador.component';
+import { ResumenProvincialComponent } from './resumen-provincial.component';
 
 @Component({
   standalone: true,
@@ -20,6 +27,7 @@ import { CrearCoordinadorComponent } from './crear-coordinador.component';
     IonSelect,
     IonSelectOption,
     CrearCoordinadorComponent,
+    ResumenProvincialComponent,
   ],
   template: `
     <ion-content class="ion-padding">
@@ -72,6 +80,7 @@ import { CrearCoordinadorComponent } from './crear-coordinador.component';
           <p role="status">{{ confirmacion() }}</p>
         }
       </form>
+
       <app-crear-coordinador [recintos]="recintos()"></app-crear-coordinador>
 
       <h2>Recintos registrados</h2>
@@ -129,6 +138,8 @@ import { CrearCoordinadorComponent } from './crear-coordinador.component';
           }
         </ul>
       }
+
+      <app-resumen-provincial></app-resumen-provincial>
     </ion-content>
   `,
 })
