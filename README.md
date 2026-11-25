@@ -108,56 +108,27 @@ Las decisiones técnicas del equipo están en el [índice de ADR](docs/adr/READM
 
 ## Capturas
 
-### 1. Inicio de sesión
+| Inicio de sesión | Gestión provincial |
+| :---: | :---: |
+| <img src="docs/capturas/01-login.jpeg" width="220" alt="Inicio de sesión con cédula y contraseña"> | <img src="docs/capturas/02-gestion-provincial.jpeg" width="220" alt="Gestión de recintos y coordinadores"> |
 
-Acceso a la aplicación con cédula y contraseña.
+| Avance de actas | Resultados por candidatura |
+| :---: | :---: |
+| <img src="docs/capturas/03-avance-actas.jpeg" width="220" alt="Avance de actas de Alcaldía y Prefectura por recinto"> | <img src="docs/capturas/04-resultados.jpeg" width="220" alt="Resultados de Prefectura en Carlos Aguilar"> |
 
-![Pantalla de inicio de sesión](docs/capturas/01-login.jpeg)
+| Asignación de juntas | Mis juntas |
+| :---: | :---: |
+| <img src="docs/capturas/05-asignacion-junta.jpeg" width="220" alt="Asignación de una junta a un veedor"> | <img src="docs/capturas/06-mis-juntas.jpeg" width="220" alt="Juntas asignadas al veedor"> |
 
-### 2. Gestión provincial
+| Acta con foto y GPS | Corrección del acta |
+| :---: | :---: |
+| <img src="docs/capturas/07-acta-foto-gps.jpeg" width="220" alt="Detalle del acta con foto y ubicación"> | <img src="docs/capturas/08-correccion-acta.jpeg" width="220" alt="Formulario de corrección del acta"> |
 
-Registro de recintos y creación de coordinadores desde el panel provincial.
+### Verificación en Supabase
 
-![Pestaña Gestión del panel provincial](docs/capturas/02-gestion-provincial.jpeg)
+Acta de Prefectura de la Junta 1 de Carlos Aguilar, Cumbayá.
 
-### 3. Avance de actas
+<p align="center">
+  <img src="docs/capturas/09-verificacion-supabase.png" width="560" alt="Consulta del acta guardada en Supabase">
+</p>
 
-Actas reportadas de Alcaldía y Prefectura respecto al total de juntas de Carlos Aguilar.
-
-![Avance de actas de Carlos Aguilar](docs/capturas/03-avance-actas.jpeg)
-
-### 4. Resultados por candidatura
-
-Detalle de votos de Prefectura con el filtro del recinto Carlos Aguilar.
-
-![Resultados de Prefectura en Carlos Aguilar](docs/capturas/04-resultados.jpeg)
-
-### 5. Asignación de juntas
-
-Asignación de la Junta 1 a un veedor activo desde el panel del coordinador.
-
-![Asignación de una junta a un veedor](docs/capturas/05-asignacion-junta.jpeg)
-
-### 6. Mis juntas
-
-Juntas asignadas al veedor y acciones disponibles para sus actas.
-
-![Pantalla Mis juntas del veedor](docs/capturas/06-mis-juntas.jpeg)
-
-### 7. Acta con foto y GPS
-
-Detalle del acta de **Prefectura de la Junta 1** desde **Coordinador → Juntas → Ver acta de Prefectura → Ver foto del acta**.
-
-![Acta de Prefectura con foto y coordenadas](docs/capturas/07-acta-foto-gps.jpeg)
-
-### 8. Corrección de acta
-
-Formulario de corrección de votos con el motivo o confirmación del guardado.
-
-![Corrección de un acta](docs/capturas/08-correccion-acta.jpeg)
-
-### 9. Verificación en Supabase
-
-Consulta del acta de Prefectura de la Junta 1 de Carlos Aguilar con los sufragantes y los datos de foto y ubicación.
-
-![Resultado de la consulta del acta en Supabase](docs/capturas/09-verificacion-supabase.png)
