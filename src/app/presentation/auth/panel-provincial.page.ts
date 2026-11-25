@@ -1,4 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { PanelHeaderComponent } from './panel-header.component';
+import { PanelModalComponent } from './panel-modal.component';
+import { PanelPagerComponent, FILAS_POR_PAGINA } from './panel-pager.component';
+import { Component, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   IonButton,
@@ -6,6 +9,11 @@ import {
   IonInput,
   IonSelect,
   IonSelectOption,
+  IonSegment,
+  IonSegmentButton,
+  IonList,
+  IonItem,
+  IonLabel,
 } from '@ionic/angular';
 import {
   listarJuntas,
@@ -20,6 +28,14 @@ import { ResumenProvincialComponent } from './resumen-provincial.component';
 @Component({
   standalone: true,
   imports: [
+    IonSegment,
+    IonSegmentButton,
+    IonList,
+    IonItem,
+    IonLabel,
+    PanelHeaderComponent,
+    PanelModalComponent,
+    PanelPagerComponent,
     ReactiveFormsModule,
     IonButton,
     IonContent,
@@ -30,24 +46,73 @@ import { ResumenProvincialComponent } from './resumen-provincial.component';
     ResumenProvincialComponent,
   ],
   template: `
-    <ion-content class="ion-padding">
-      <h1>Panel provincial</h1>
-
-      <h2>Registrar recinto</h2>
-      <p>Pichincha · Quito</p>
-
+    <app-panel-header titulo="Provincial"></app-panel-header>
+    <ion-segment class="ce-segments" [value]="seccion()" (ionChange)="cambiarSeccion($event.detail.value)">
+      <ion-segment-button value="avance">Avance</ion-segment-button>
+      <ion-segment-button value="resultados">Resultados</ion-segment-button>
+      <ion-segment-button value="gestion">Gestión</ion-segment-button>
+    </ion-segment>
+    <ion-content class="ce-panel">
+      <main class="ce-main ce-compact">
+        <app-resumen-provincial
+          #resumen
+          [seccion]="seccion()"
+          [hidden]="seccion() === 'gestion'"
+        ></app-resumen-provincial>
+        @if (seccion() === 'gestion') {
+          <div class="ce-actions">
+            <ion-button (click)="gestion.set('recinto')">Registrar recinto</ion-button>
+            <ion-button fill="outline" (click)="gestion.set('coordinador')">Crear coordinador</ion-button>
+          </div>
+          <h2>Recintos registrados</h2>
+          @if (confirmacion()) {
+            <p role="status">{{ confirmacion() }}</p>
+          }
+          @if (cargando()) {
+            <p role="status">Cargando recintos…</p>
+          } @else if (errorLista()) {
+            <p role="alert">{{ errorLista() }}</p>
+            <ion-button fill="outline" (click)="cargar()">Reintentar</ion-button>
+          } @else {
+            <ion-list class="ce-rows" aria-label="Recintos registrados">
+              @for (
+                recinto of recintos().slice(pagina() * filasPorPagina, pagina() * filasPorPagina + filasPorPagina);
+                track recinto.id
+              ) {
+                <ion-item [button]="true" (click)="abrirJuntas(recinto)">
+                  <ion-label
+                    ><h3>{{ recinto.nombre }}</h3>
+                    <p>{{ recinto.parroquia }} · {{ recinto.cantidad_jrv }} JRV</p></ion-label
+                  >
+                </ion-item>
+              } @empty {
+                <ion-item>Todavía no hay recintos registrados.</ion-item>
+              }
+            </ion-list>
+            <app-panel-pager
+              [total]="recintos().length"
+              [pagina]="pagina()"
+              (cambio)="pagina.set($event)"
+            ></app-panel-pager>
+          }
+        }
+      </main>
+    </ion-content>
+    <app-panel-modal
+      titulo="Registrar recinto"
+      [abierto]="gestion() === 'recinto'"
+      [hayCambios]="recintoSinGuardar"
+      [bloqueado]="guardando()"
+      (cerrado)="cerrarRegistro()"
+    >
       <form [formGroup]="form" (ngSubmit)="guardar()">
-        <ion-input
-          label="Nombre del recinto"
-          labelPlacement="stacked"
-          formControlName="nombre"
-        ></ion-input>
+        <ion-input label="Nombre del recinto" labelPlacement="stacked" formControlName="nombre"></ion-input>
 
         <ion-select
           label="Parroquia"
           labelPlacement="stacked"
           placeholder="Selecciona una parroquia"
-          interface="modal"
+          interface="popover"
           formControlName="parroquia"
         >
           @for (parroquia of parroquias; track parroquia) {
@@ -80,70 +145,88 @@ import { ResumenProvincialComponent } from './resumen-provincial.component';
           <p role="status">{{ confirmacion() }}</p>
         }
       </form>
-
-      <app-crear-coordinador [recintos]="recintos()"></app-crear-coordinador>
-
-      <h2>Recintos registrados</h2>
-
-      @if (cargando()) {
-        <p role="status">Cargando recintos…</p>
-      } @else if (errorLista()) {
-        <p role="alert">{{ errorLista() }}</p>
-        <ion-button type="button" fill="outline" (click)="cargar()">
-          Reintentar
-        </ion-button>
-      } @else {
-        <ul>
-          @for (recinto of recintos(); track recinto.id) {
-            <li>
-              <strong>{{ recinto.nombre }}</strong>
-              <p>{{ recinto.parroquia }} · {{ recinto.cantidad_jrv }} JRV</p>
-
-              <ion-button
-                type="button"
-                fill="outline"
-                [disabled]="cargandoJuntas()"
-                [attr.aria-expanded]="recintoAbierto() === recinto.id"
-                (click)="mostrarJuntas(recinto.id)"
-              >
-                @if (recintoAbierto() !== recinto.id) {
-                  Ver juntas
-                } @else if (cargandoJuntas()) {
-                  Cargando juntas…
-                } @else if (errorJuntas()) {
-                  Reintentar
-                } @else {
-                  Ocultar juntas
-                }
-              </ion-button>
-
-              @if (recintoAbierto() === recinto.id) {
-                @if (cargandoJuntas()) {
-                  <p role="status">Consultando las juntas del recinto…</p>
-                } @else if (errorJuntas()) {
-                  <p role="alert">{{ errorJuntas() }}</p>
-                } @else {
-                  <ul>
-                    @for (junta of juntas(); track junta.id) {
-                      <li>Junta {{ junta.numero }}</li>
-                    } @empty {
-                      <li>Este recinto todavía no tiene juntas.</li>
-                    }
-                  </ul>
-                }
-              }
-            </li>
-          } @empty {
-            <li>Todavía no hay recintos registrados.</li>
-          }
-        </ul>
+    </app-panel-modal>
+    <app-panel-modal
+      titulo="Crear coordinador"
+      [abierto]="gestion() === 'coordinador'"
+      [hayCambios]="coordinadorSinGuardar"
+      [bloqueado]="coordinadorForm()?.guardando() ?? false"
+      (cerrado)="gestion.set(null)"
+    >
+      @if (gestion() === 'coordinador') {
+        <app-crear-coordinador #coordinadorForm [recintos]="recintos()"></app-crear-coordinador>
       }
-
-      <app-resumen-provincial></app-resumen-provincial>
-    </ion-content>
+    </app-panel-modal>
+    <app-panel-modal
+      [titulo]="recintoDetalle()?.nombre ?? 'Juntas'"
+      [abierto]="recintoDetalle() !== null"
+      (cerrado)="cerrarJuntas()"
+    >
+      @if (cargandoJuntas()) {
+        <p role="status">Consultando las juntas del recinto…</p>
+      } @else if (errorJuntas()) {
+        <p role="alert">{{ errorJuntas() }}</p>
+        <ion-button fill="outline" (click)="reintentarJuntas()">Reintentar</ion-button>
+      } @else {
+        <ion-list class="ce-rows" aria-label="Juntas del recinto">
+          @for (
+            junta of juntas().slice(paginaJuntas() * filasPorPagina, paginaJuntas() * filasPorPagina + filasPorPagina);
+            track junta.id
+          ) {
+            <ion-item>Junta {{ junta.numero }}</ion-item>
+          } @empty {
+            <ion-item>Este recinto todavía no tiene juntas.</ion-item>
+          }
+        </ion-list>
+        <app-panel-pager
+          [total]="juntas().length"
+          [pagina]="paginaJuntas()"
+          (cambio)="paginaJuntas.set($event)"
+        ></app-panel-pager>
+      }
+    </app-panel-modal>
   `,
 })
 export class PanelProvincialPage {
+  readonly seccion = signal<'avance' | 'resultados' | 'gestion'>('avance');
+  readonly gestion = signal<'recinto' | 'coordinador' | null>(null);
+  readonly filasPorPagina = FILAS_POR_PAGINA;
+  readonly pagina = signal(0);
+  private readonly resumen = viewChild<ResumenProvincialComponent>('resumen');
+  private solicitudJuntas = 0;
+  readonly paginaJuntas = signal(0);
+  readonly recintoDetalle = signal<Recinto | null>(null);
+  readonly coordinadorForm = viewChild<CrearCoordinadorComponent>('coordinadorForm');
+  readonly recintoSinGuardar = () => this.form.dirty;
+  readonly coordinadorSinGuardar = () => this.coordinadorForm()?.form.dirty ?? false;
+
+  cambiarSeccion(valor: unknown): void {
+    if (valor === 'avance' || valor === 'resultados' || valor === 'gestion') this.seccion.set(valor);
+  }
+
+  cerrarRegistro(): void {
+    this.gestion.set(null);
+    this.form.reset();
+    this.errorFormulario.set('');
+  }
+
+  abrirJuntas(recinto: Recinto): void {
+    this.paginaJuntas.set(0);
+    this.recintoDetalle.set(recinto);
+    void this.mostrarJuntas(recinto.id);
+  }
+
+  cerrarJuntas(): void {
+    this.recintoDetalle.set(null);
+    this.solicitudJuntas++;
+    this.cargandoJuntas.set(false);
+  }
+
+  reintentarJuntas(): void {
+    const recinto = this.recintoDetalle();
+    if (recinto) void this.mostrarJuntas(recinto.id);
+  }
+
   private readonly fb = inject(FormBuilder);
 
   readonly parroquias: readonly string[] = [
@@ -213,7 +296,6 @@ export class PanelProvincialPage {
   readonly errorFormulario = signal('');
   readonly confirmacion = signal('');
 
-  readonly recintoAbierto = signal<string | null>(null);
   readonly juntas = signal<Junta[]>([]);
   readonly cargandoJuntas = signal(false);
   readonly errorJuntas = signal('');
@@ -245,25 +327,21 @@ export class PanelProvincialPage {
     }
   }
 
-  async mostrarJuntas(recintoId: string): Promise<void> {
-    if (this.cargandoJuntas()) return;
-
-    if (this.recintoAbierto() === recintoId && !this.errorJuntas()) {
-      this.recintoAbierto.set(null);
-      return;
-    }
-
-    this.recintoAbierto.set(recintoId);
+  private async mostrarJuntas(recintoId: string): Promise<void> {
+    const solicitud = ++this.solicitudJuntas;
     this.juntas.set([]);
     this.errorJuntas.set('');
     this.cargandoJuntas.set(true);
 
     try {
-      this.juntas.set(await listarJuntas(recintoId));
+      const juntas = await listarJuntas(recintoId);
+      if (solicitud === this.solicitudJuntas) this.juntas.set(juntas);
     } catch {
-      this.errorJuntas.set('No se pudieron cargar las juntas de este recinto.');
+      if (solicitud === this.solicitudJuntas) {
+        this.errorJuntas.set('No se pudieron cargar las juntas de este recinto.');
+      }
     } finally {
-      this.cargandoJuntas.set(false);
+      if (solicitud === this.solicitudJuntas) this.cargandoJuntas.set(false);
     }
   }
 
@@ -289,11 +367,7 @@ export class PanelProvincialPage {
       return;
     }
 
-    if (
-      cantidadJrv === null ||
-      this.form.controls.cantidad_jrv.invalid ||
-      !Number.isInteger(cantidadJrv)
-    ) {
+    if (cantidadJrv === null || this.form.controls.cantidad_jrv.invalid || !Number.isInteger(cantidadJrv)) {
       this.errorFormulario.set('Ingresa una cantidad entera de JRV mayor a cero.');
       return;
     }
@@ -311,11 +385,10 @@ export class PanelProvincialPage {
 
       this.form.reset();
       this.confirmacion.set('Recinto guardado.');
-      await this.cargar();
+      this.pagina.set(0);
+      await Promise.all([this.cargar(), this.resumen()?.actualizar()]);
     } catch (error) {
-      this.errorFormulario.set(
-        error instanceof Error ? error.message : 'No se pudo guardar el recinto.',
-      );
+      this.errorFormulario.set(error instanceof Error ? error.message : 'No se pudo guardar el recinto.');
     } finally {
       this.guardando.set(false);
     }

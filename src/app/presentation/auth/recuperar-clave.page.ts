@@ -8,67 +8,72 @@ import {
   verificarCodigoRecuperacion,
 } from '../../core/infrastructure/auth.gateway';
 
+import { ElectoralBrandComponent } from './electoral-brand.component';
+
 @Component({
   selector: 'app-recuperar-clave',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, IonButton, IonContent, IonInput],
+  imports: [ElectoralBrandComponent, ReactiveFormsModule, RouterLink, IonButton, IonContent, IonInput],
   template: `
-    <ion-content class="ion-padding">
-      <h1>Recuperar contraseña</h1>
+    <ion-content class="ce-auth">
+      <app-electoral-brand></app-electoral-brand>
+      <main class="ce-auth-card">
+        <h1>Recuperar contraseña</h1>
 
-      @if (paso() === 'listo') {
-        <p role="status">Contraseña actualizada. Ya puedes ingresar con tu cédula.</p>
-      } @else {
-        <form [formGroup]="form" (ngSubmit)="continuar()">
-          @switch (paso()) {
-            @case ('correo') {
-              <ion-input
-                label="Correo registrado"
-                labelPlacement="stacked"
-                type="email"
-                autocomplete="email"
-                formControlName="correo"
-              ></ion-input>
+        @if (paso() === 'listo') {
+          <p role="status">Contraseña actualizada. Ya puedes ingresar con tu cédula.</p>
+        } @else {
+          <form [formGroup]="form" (ngSubmit)="continuar()">
+            @switch (paso()) {
+              @case ('correo') {
+                <ion-input
+                  label="Correo registrado"
+                  labelPlacement="stacked"
+                  type="email"
+                  autocomplete="email"
+                  formControlName="correo"
+                ></ion-input>
+              }
+              @case ('codigo') {
+                <p>Si el correo está registrado, recibirás un código de recuperación.</p>
+                <ion-input
+                  label="Código del correo"
+                  labelPlacement="stacked"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  formControlName="codigo"
+                ></ion-input>
+              }
+              @case ('clave') {
+                <ion-input
+                  label="Nueva contraseña"
+                  labelPlacement="stacked"
+                  type="password"
+                  autocomplete="new-password"
+                  formControlName="clave"
+                ></ion-input>
+                <ion-input
+                  label="Confirma la contraseña"
+                  labelPlacement="stacked"
+                  type="password"
+                  autocomplete="new-password"
+                  formControlName="confirmacion"
+                ></ion-input>
+              }
             }
-            @case ('codigo') {
-              <p>Si el correo está registrado, recibirás un código de recuperación.</p>
-              <ion-input
-                label="Código del correo"
-                labelPlacement="stacked"
-                inputmode="numeric"
-                autocomplete="one-time-code"
-                formControlName="codigo"
-              ></ion-input>
+
+            @if (mensaje()) {
+              <p role="alert">{{ mensaje() }}</p>
             }
-            @case ('clave') {
-              <ion-input
-                label="Nueva contraseña"
-                labelPlacement="stacked"
-                type="password"
-                autocomplete="new-password"
-                formControlName="clave"
-              ></ion-input>
-              <ion-input
-                label="Confirma la contraseña"
-                labelPlacement="stacked"
-                type="password"
-                autocomplete="new-password"
-                formControlName="confirmacion"
-              ></ion-input>
-            }
-          }
 
-          @if (mensaje()) {
-            <p role="alert">{{ mensaje() }}</p>
-          }
+            <ion-button expand="block" type="submit" [disabled]="ocupado()">
+              {{ ocupado() ? 'Procesando…' : etiquetas[paso()] }}
+            </ion-button>
+          </form>
+        }
 
-          <ion-button expand="block" type="submit" [disabled]="ocupado()">
-            {{ ocupado() ? 'Procesando…' : etiquetas[paso()] }}
-          </ion-button>
-        </form>
-      }
-
-      <a routerLink="/login">Volver al inicio de sesión</a>
+        <a routerLink="/login">Volver al inicio de sesión</a>
+      </main>
     </ion-content>
   `,
 })
@@ -137,9 +142,7 @@ export class RecuperarClavePage {
           break;
       }
     } catch (error) {
-      this.mensaje.set(
-        error instanceof Error ? error.message : 'No se pudo completar la recuperación.',
-      );
+      this.mensaje.set(error instanceof Error ? error.message : 'No se pudo completar la recuperación.');
     } finally {
       this.ocupado.set(false);
     }

@@ -1,68 +1,75 @@
+import { PanelHeaderComponent } from './panel-header.component';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { IonButton, IonContent, IonInput } from '@ionic/angular';
 import { AuthService } from '../../core/application/auth.service';
 
+import { ElectoralBrandComponent } from './electoral-brand.component';
+
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, IonButton, IonContent, IonInput],
+  imports: [PanelHeaderComponent, ElectoralBrandComponent, ReactiveFormsModule, IonButton, IonContent, IonInput],
   template: `
-    <ion-content class="ion-padding">
-      <h1>Activar cuenta</h1>
+    <app-panel-header titulo="Control Electoral" [hayCambios]="hayCambios" [bloqueado]="ocupado()"></app-panel-header>
+    <ion-content class="ce-auth">
+      <app-electoral-brand></app-electoral-brand>
+      <main class="ce-auth-card">
+        <h1>Activar cuenta</h1>
 
-      @if (activada()) {
-        <p role="status">Cuenta activada. Ingresa con tu cédula y la nueva contraseña.</p>
-        <ion-button type="button" [disabled]="ocupado()" (click)="volverAlLogin()">
-          Volver al inicio de sesión
-        </ion-button>
-      } @else {
-        <p>Solicita un código al correo registrado para tu cuenta.</p>
+        @if (activada()) {
+          <p role="status">Cuenta activada. Ingresa con tu cédula y la nueva contraseña.</p>
+          <ion-button type="button" [disabled]="ocupado()" (click)="volverAlLogin()">
+            Volver al inicio de sesión
+          </ion-button>
+        } @else {
+          <p>Solicita un código al correo registrado para tu cuenta.</p>
 
-        <ion-button type="button" [disabled]="ocupado()" (click)="enviarCodigo()">
-          {{ codigoEnviado() ? 'Solicitar otro código' : 'Enviar código' }}
-        </ion-button>
+          <ion-button type="button" [disabled]="ocupado()" (click)="enviarCodigo()">
+            {{ codigoEnviado() ? 'Solicitar otro código' : 'Enviar código' }}
+          </ion-button>
 
-        @if (codigoEnviado()) {
-          <p role="status">Revisa tu correo y la carpeta de Spam.</p>
+          @if (codigoEnviado()) {
+            <p role="status">Revisa tu correo y la carpeta de Spam.</p>
 
-          <form [formGroup]="form" (ngSubmit)="confirmar()">
-            <ion-input
-              label="Código de 8 dígitos"
-              labelPlacement="stacked"
-              type="text"
-              inputmode="numeric"
-              maxlength="8"
-              autocomplete="one-time-code"
-              formControlName="codigo"
-            ></ion-input>
+            <form [formGroup]="form" (ngSubmit)="confirmar()">
+              <ion-input
+                label="Código de 8 dígitos"
+                labelPlacement="stacked"
+                type="text"
+                inputmode="numeric"
+                maxlength="8"
+                autocomplete="one-time-code"
+                formControlName="codigo"
+              ></ion-input>
 
-            <ion-input
-              label="Nueva contraseña"
-              labelPlacement="stacked"
-              type="password"
-              autocomplete="new-password"
-              formControlName="clave"
-            ></ion-input>
+              <ion-input
+                label="Nueva contraseña"
+                labelPlacement="stacked"
+                type="password"
+                autocomplete="new-password"
+                formControlName="clave"
+              ></ion-input>
 
-            <ion-input
-              label="Confirma la contraseña"
-              labelPlacement="stacked"
-              type="password"
-              autocomplete="new-password"
-              formControlName="confirmacion"
-            ></ion-input>
+              <ion-input
+                label="Confirma la contraseña"
+                labelPlacement="stacked"
+                type="password"
+                autocomplete="new-password"
+                formControlName="confirmacion"
+              ></ion-input>
 
-            <ion-button type="submit" expand="block" [disabled]="ocupado()">
-              {{ ocupado() ? 'Procesando…' : 'Activar cuenta' }}
-            </ion-button>
-          </form>
+              <ion-button type="submit" expand="block" [disabled]="ocupado()">
+                {{ ocupado() ? 'Procesando…' : 'Activar cuenta' }}
+              </ion-button>
+            </form>
+          }
         }
-      }
 
-      @if (error()) {
-        <p role="alert">{{ error() }}</p>
-      }
+        @if (error()) {
+          <p role="alert">{{ error() }}</p>
+        }
+      </main>
     </ion-content>
   `,
 })
@@ -75,6 +82,7 @@ export class ActivarCuentaPage {
   readonly activada = signal(false);
   readonly error = signal('');
 
+  readonly hayCambios = () => this.form.dirty;
   readonly form = inject(FormBuilder).nonNullable.group({
     codigo: '',
     clave: '',
@@ -101,9 +109,7 @@ export class ActivarCuentaPage {
     }
 
     if (clave.length < 8 || clave === 'Ecuador2026' || clave !== confirmacion) {
-      this.error.set(
-        'Usa una clave distinta de la temporal, de al menos 8 caracteres, y confírmala.',
-      );
+      this.error.set('Usa una clave distinta de la temporal, de al menos 8 caracteres, y confírmala.');
       return;
     }
 

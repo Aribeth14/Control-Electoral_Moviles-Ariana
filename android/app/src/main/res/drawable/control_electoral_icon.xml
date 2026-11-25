@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    <path
+        android:fillColor="@color/control_electoral_blue"
+        android:pathData="M14,0h36a14,14 0,0 1,14 14v36a14,14 0,0 1,-14 14H14A14,14 0,0 1,0 50V14A14,14 0,0 1,14 0z" />
+    <group android:pivotX="32" android:pivotY="32" android:scaleX="0.8" android:scaleY="0.8">
+        <path
+            android:pathData="M9,33h46v24H9z M9,33l6,-9h9 M43,24h6l6,9 M21,33h22 M24,13l16,-6 9,23 M24,13l7,20 M30,18l8,-3 M32,23l8,-3"
+            android:strokeColor="#83DCD0"
+            android:strokeWidth="3"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>

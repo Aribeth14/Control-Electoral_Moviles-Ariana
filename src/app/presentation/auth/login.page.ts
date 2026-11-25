@@ -1,22 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import {IonButton,IonContent,IonHeader,IonInput,IonTitle,IonToolbar,} from '@ionic/angular';
+import { IonButton, IonContent, IonInput } from '@ionic/angular';
 import { AuthService } from '../../core/application/auth.service';
+
+import { ElectoralBrandComponent } from './electoral-brand.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    IonButton,
-    IonContent,
-    IonHeader,
-    IonInput,
-    IonTitle,
-    IonToolbar,
-  ],
+  imports: [ElectoralBrandComponent, ReactiveFormsModule, RouterLink, IonButton, IonContent, IonInput],
   templateUrl: './login.page.html',
 })
 export class LoginPage {
@@ -63,8 +56,7 @@ export class LoginPage {
           throw new Error('Tu cuenta no tiene un recinto asignado.');
         }
 
-        const cuentaActiva =
-          perfil.correo_verificado && !perfil.debe_cambiar_clave;
+        const cuentaActiva = perfil.correo_verificado && !perfil.debe_cambiar_clave;
 
         destino = cuentaActiva ? `/${perfil.rol}` : '/activar-cuenta';
       } else {
@@ -73,9 +65,7 @@ export class LoginPage {
 
       await this.router.navigateByUrl(destino, { replaceUrl: true });
     } catch (error) {
-      this.mensajeError.set(
-        error instanceof Error ? error.message : 'No se pudo iniciar sesión.',
-      );
+      this.mensajeError.set(error instanceof Error ? error.message : 'No se pudo iniciar sesión.');
     } finally {
       this.cargando.set(false);
     }

@@ -1,2 +1,32 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+@use './electoral';
+
+:root {
+  color-scheme: light;
+  --ce-blue: #123b5d;
+  --ce-teal: #0d7873;
+  --ce-mint: #83dcd0;
+  --ce-water: #ddf2f0;
+  --ce-white: #fff;
+  --ce-bg: #f3f7fa;
+  --ce-border: #d8e4eb;
+  --ce-muted: #496275;
+  --ce-error: #a12735;
+  --ce-green: #216443;
+  --ce-green-bg: #e3f3e9;
+  --ce-amber: #765000;
+  --ce-amber-bg: #fff2d3;
+  --ce-sm: 0.5rem;
+  --ce-md: 0.875rem;
+  --ce-lg: 1.25rem;
+  --ce-gap: 1rem;
+  --ion-font-family: Roboto, system-ui, sans-serif;
+  --ce-font-heading: Georgia, 'Noto Serif', serif;
+  --ion-color-primary: var(--ce-teal);
+  --ion-color-primary-rgb: 13, 120, 115;
+  --ion-color-primary-contrast: #fff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0b6a65;
+  --ion-color-primary-tint: #258680;
+  --ion-background-color: var(--ce-bg);
+  --ion-text-color: var(--ce-blue);
+}

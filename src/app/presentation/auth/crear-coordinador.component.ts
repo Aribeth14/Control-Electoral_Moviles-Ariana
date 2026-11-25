@@ -1,19 +1,13 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import {IonButton,IonInput,IonSelect,IonSelectOption,} from '@ionic/angular';
+import { IonButton, IonInput, IonSelect, IonSelectOption } from '@ionic/angular';
 import type { Recinto } from '../../core/infrastructure/recintos.repository';
 import { crearCoordinador } from '../../core/infrastructure/usuarios.repository';
 
 @Component({
   selector: 'app-crear-coordinador',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    IonButton,
-    IonInput,
-    IonSelect,
-    IonSelectOption,
-  ],
+  imports: [ReactiveFormsModule, IonButton, IonInput, IonSelect, IonSelectOption],
   template: `
     <h2>Crear {{ tipo() === 'veedor' ? 'veedor' : 'coordinador de recinto' }}</h2>
 
@@ -22,27 +16,17 @@ import { crearCoordinador } from '../../core/infrastructure/usuarios.repository'
         label="Recinto"
         labelPlacement="stacked"
         placeholder="Selecciona un recinto"
-        interface="modal"
+        interface="popover"
         formControlName="recinto_id"
       >
         @for (recinto of recintos(); track recinto.id) {
-          <ion-select-option [value]="recinto.id">
-            {{ recinto.nombre }} · {{ recinto.parroquia }}
-          </ion-select-option>
+          <ion-select-option [value]="recinto.id"> {{ recinto.nombre }} · {{ recinto.parroquia }} </ion-select-option>
         }
       </ion-select>
 
-      <ion-input
-        label="Nombres"
-        labelPlacement="stacked"
-        formControlName="nombres"
-      ></ion-input>
+      <ion-input label="Nombres" labelPlacement="stacked" formControlName="nombres"></ion-input>
 
-      <ion-input
-        label="Apellidos"
-        labelPlacement="stacked"
-        formControlName="apellidos"
-      ></ion-input>
+      <ion-input label="Apellidos" labelPlacement="stacked" formControlName="apellidos"></ion-input>
 
       <ion-input
         label="Cédula"
@@ -61,18 +45,9 @@ import { crearCoordinador } from '../../core/infrastructure/usuarios.repository'
         formControlName="telefono"
       ></ion-input>
 
-      <ion-input
-        label="Correo electrónico"
-        labelPlacement="stacked"
-        type="email"
-        formControlName="correo"
-      ></ion-input>
+      <ion-input label="Correo electrónico" labelPlacement="stacked" type="email" formControlName="correo"></ion-input>
 
-      <ion-button
-        type="submit"
-        expand="block"
-        [disabled]="guardando() || recintos().length === 0"
-      >
+      <ion-button type="submit" expand="block" [disabled]="guardando() || recintos().length === 0">
         {{ guardando() ? 'Creando cuenta…' : 'Crear ' + tipo() }}
       </ion-button>
 
@@ -141,9 +116,7 @@ export class CrearCoordinadorComponent {
       this.form.reset();
       this.mensaje.set(resultado.mensaje);
     } catch (error) {
-      this.error.set(
-        error instanceof Error ? error.message : 'No se pudo crear la cuenta.',
-      );
+      this.error.set(error instanceof Error ? error.message : 'No se pudo crear la cuenta.');
     } finally {
       this.guardando.set(false);
     }

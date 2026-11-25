@@ -1,50 +1,27 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Control Electoral</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="ion-padding">
-  @if (mensajeError()) {
+<ion-content class="ce-auth ce-login">
+  <app-electoral-brand></app-electoral-brand>
+  <main class="ce-auth-card">
+    @if (mensajeError()) {
     <p role="alert">{{ mensajeError() }}</p>
-  }
-
-  @if (perfil(); as usuario) {
+    } @if (perfil(); as usuario) {
     <h1>Sesión iniciada</h1>
     <p>{{ usuario.nombres }} {{ usuario.apellidos }}</p>
     <p>Rol: {{ usuario.rol }}</p>
 
-    @if (usuario.rol === 'recinto' || usuario.rol === 'veedor') {
-      @if (!usuario.recinto_id) {
-        @if (!mensajeError()) {
-          <p role="alert">Tu cuenta no tiene un recinto asignado.</p>
-        }
-      } @else if (!usuario.correo_verificado || usuario.debe_cambiar_clave) {
-        <ion-button type="button" routerLink="/activar-cuenta">
-          Activar cuenta
-        </ion-button>
-      } @else if (usuario.rol === 'recinto') {
-        <ion-button type="button" routerLink="/recinto">
-          Ir a mi recinto
-        </ion-button>
-      } @else {
-        <ion-button type="button" routerLink="/veedor">
-          Ir al panel de veedor
-        </ion-button>
-      }
-    } @else if (usuario.rol === 'provincial') {
-      @if (usuario.debe_cambiar_clave) {
-        <ion-button type="button" routerLink="/cambiar-clave">
-          Cambiar contraseña
-        </ion-button>
-      } @else {
-        <ion-button type="button" routerLink="/provincial">
-          Ir al panel provincial
-        </ion-button>
-      }
-    }
-  } @else {
-    <h1>Ingreso por cédula</h1>
+    @if (usuario.rol === 'recinto' || usuario.rol === 'veedor') { @if (!usuario.recinto_id) { @if (!mensajeError()) {
+    <p role="alert">Tu cuenta no tiene un recinto asignado.</p>
+    } } @else if (!usuario.correo_verificado || usuario.debe_cambiar_clave) {
+    <ion-button type="button" routerLink="/activar-cuenta"> Activar cuenta </ion-button>
+    } @else if (usuario.rol === 'recinto') {
+    <ion-button type="button" routerLink="/recinto"> Ir a mi recinto </ion-button>
+    } @else {
+    <ion-button type="button" routerLink="/veedor"> Ir al panel de veedor </ion-button>
+    } } @else if (usuario.rol === 'provincial') { @if (usuario.debe_cambiar_clave) {
+    <ion-button type="button" routerLink="/cambiar-clave"> Cambiar contraseña </ion-button>
+    } @else {
+    <ion-button type="button" routerLink="/provincial"> Ir al panel provincial </ion-button>
+    } } } @else {
+    <h1>Iniciar sesión</h1>
 
     <form [formGroup]="form" (ngSubmit)="ingresar()">
       <ion-input
@@ -58,7 +35,7 @@
       ></ion-input>
 
       @if (form.controls.cedula.touched && form.controls.cedula.invalid) {
-        <p>Ingresa una cédula de 10 dígitos.</p>
+      <p role="alert">Ingresa una cédula de 10 dígitos.</p>
       }
 
       <ion-input
@@ -70,7 +47,7 @@
       ></ion-input>
 
       @if (form.controls.password.touched && form.controls.password.invalid) {
-        <p>Ingresa tu contraseña.</p>
+      <p role="alert">Ingresa tu contraseña.</p>
       }
 
       <ion-button expand="block" type="submit" [disabled]="cargando()">
@@ -79,5 +56,6 @@
     </form>
 
     <a routerLink="/recuperar-clave">¿Olvidaste tu contraseña?</a>
-  }
+    }
+  </main>
 </ion-content>

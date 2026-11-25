@@ -1,43 +1,50 @@
+import { PanelHeaderComponent } from './panel-header.component';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { IonButton, IonContent, IonInput } from '@ionic/angular';
 import { AuthService } from '../../core/application/auth.service';
 
+import { ElectoralBrandComponent } from './electoral-brand.component';
+
 @Component({
   selector: 'app-cambiar-clave',
   standalone: true,
-  imports: [ReactiveFormsModule, IonButton, IonContent, IonInput],
+  imports: [PanelHeaderComponent, ElectoralBrandComponent, ReactiveFormsModule, IonButton, IonContent, IonInput],
   template: `
-    <ion-content class="ion-padding">
-      <h1>Cambiar contraseña</h1>
-      <p>Antes de continuar, elige una contraseña nueva de al menos 10 caracteres.</p>
+    <app-panel-header titulo="Control Electoral" [hayCambios]="hayCambios" [bloqueado]="guardando()"></app-panel-header>
+    <ion-content class="ce-auth">
+      <app-electoral-brand></app-electoral-brand>
+      <main class="ce-auth-card">
+        <h1>Cambiar contraseña</h1>
+        <p>Antes de continuar, elige una contraseña nueva de al menos 10 caracteres.</p>
 
-      <form [formGroup]="form" (ngSubmit)="guardar()">
-        <ion-input
-          label="Nueva contraseña"
-          labelPlacement="stacked"
-          type="password"
-          autocomplete="new-password"
-          formControlName="nueva"
-        ></ion-input>
+        <form [formGroup]="form" (ngSubmit)="guardar()">
+          <ion-input
+            label="Nueva contraseña"
+            labelPlacement="stacked"
+            type="password"
+            autocomplete="new-password"
+            formControlName="nueva"
+          ></ion-input>
 
-        <ion-input
-          label="Confirma la contraseña"
-          labelPlacement="stacked"
-          type="password"
-          autocomplete="new-password"
-          formControlName="confirmacion"
-        ></ion-input>
+          <ion-input
+            label="Confirma la contraseña"
+            labelPlacement="stacked"
+            type="password"
+            autocomplete="new-password"
+            formControlName="confirmacion"
+          ></ion-input>
 
-        @if (mensaje()) {
-          <p role="alert">{{ mensaje() }}</p>
-        }
+          @if (mensaje()) {
+            <p role="alert">{{ mensaje() }}</p>
+          }
 
-        <ion-button expand="block" type="submit" [disabled]="guardando()">
-          {{ guardando() ? 'Guardando…' : 'Guardar contraseña' }}
-        </ion-button>
-      </form>
+          <ion-button expand="block" type="submit" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Guardar contraseña' }}
+          </ion-button>
+        </form>
+      </main>
     </ion-content>
   `,
 })
@@ -49,6 +56,7 @@ export class CambiarClavePage {
   readonly guardando = signal(false);
   readonly mensaje = signal('');
 
+  readonly hayCambios = () => this.form.dirty;
   readonly form = this.fb.nonNullable.group({
     nueva: ['', [Validators.required, Validators.minLength(10)]],
     confirmacion: ['', Validators.required],
