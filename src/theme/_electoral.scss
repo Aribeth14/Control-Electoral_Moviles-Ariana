@@ -38,24 +38,6 @@
   border-radius: var(--ce-sm);
   background: var(--ce-mint);
 }
-.ce-login .ce-urn {
-  animation: ce-hop 280ms ease-in-out both;
-}
-@keyframes ce-hop {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  45% {
-    transform: translateY(-10px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ce-login .ce-urn {
-    animation: none;
-  }
-}
-
 .ce-auth-card {
   width: min(calc(100% - 2rem), 29rem);
   margin: 1rem auto calc(2rem + var(--ion-safe-area-bottom, 0px));
@@ -607,4 +589,114 @@ app-panel-header {
 .ce-filters ion-searchbar .searchbar-input {
   min-height: 44px;
   border: 1px solid var(--ce-border);
+}
+
+/* Empty pager hosts should not reserve an extra grid gutter. */
+app-panel-pager:not(:has(nav)) {
+  display: none;
+}
+
+.ce-compact {
+  align-content: start;
+  padding-block-end: calc(1rem + var(--ion-safe-area-bottom, 0px));
+}
+
+.ce-rows.list-md,
+.ce-rows.list-ios {
+  padding-block: 0;
+}
+
+.ce-login {
+  --background: var(--ce-bg);
+}
+
+.ce-login-shell {
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: calc(0.75rem + var(--ion-safe-area-top, 0px)) clamp(0.75rem, 4vw, 1.5rem)
+    calc(0.75rem + var(--ion-safe-area-bottom, 0px));
+}
+
+.ce-login-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--ce-lg);
+  background: linear-gradient(145deg, #fff 12%, var(--ce-water) 75%);
+  border: 1px solid var(--ce-border);
+  padding: 0.85rem 0.85rem 1.25rem;
+}
+
+.ce-login-brand {
+  margin: 0;
+  color: var(--ce-blue);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.ce-vote-scene {
+  display: block;
+  margin-inline: auto;
+  width: min(100%, 23rem);
+  height: clamp(6.75rem, 24vw, 10.25rem);
+}
+
+.ce-vote-arm {
+  transform-origin: 104px 81px;
+  animation: ce-deposit-arm 1.65s ease-in-out both;
+}
+
+.ce-vote-ballot {
+  opacity: 0;
+  animation: ce-deposit-ballot 1.65s ease-in-out both;
+}
+
+@keyframes ce-deposit-arm {
+  0%,
+  14%,
+  100% {
+    transform: rotate(0deg);
+  }
+  43%,
+  63% {
+    transform: rotate(17deg);
+  }
+}
+
+@keyframes ce-deposit-ballot {
+  0%,
+  14% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  43% {
+    transform: translate(9px, 29px);
+    opacity: 1;
+  }
+  65%,
+  100% {
+    transform: translate(9px, 60px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ce-vote-arm,
+  .ce-vote-ballot {
+    animation: none;
+  }
+  .ce-vote-ballot {
+    opacity: 1;
+    transform: translate(9px, 20px);
+  }
+}
+
+.ce-login .ce-auth-card {
+  position: relative;
+  width: calc(100% - 1rem);
+  margin: -0.75rem auto 0;
+  box-shadow: 0 0.6rem 1.6rem rgb(18 59 93 / 9%);
+}
+
+.ce-login .ce-auth-card h1 {
+  margin-bottom: 0.85rem;
 }

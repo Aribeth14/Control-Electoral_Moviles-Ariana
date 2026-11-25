@@ -1,7 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { IonButton } from '@ionic/angular';
 
-export const FILAS_POR_PAGINA = 4;
+export const FILAS_POR_PAGINA = 5;
 
 @Component({
   selector: 'app-panel-pager',

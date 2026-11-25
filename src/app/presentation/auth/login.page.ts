@@ -4,12 +4,10 @@ import { Router, RouterLink } from '@angular/router';
 import { IonButton, IonContent, IonInput } from '@ionic/angular';
 import { AuthService } from '../../core/application/auth.service';
 
-import { ElectoralBrandComponent } from './electoral-brand.component';
-
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ElectoralBrandComponent, ReactiveFormsModule, RouterLink, IonButton, IonContent, IonInput],
+  imports: [ReactiveFormsModule, RouterLink, IonButton, IonContent, IonInput],
   templateUrl: './login.page.html',
 })
 export class LoginPage {

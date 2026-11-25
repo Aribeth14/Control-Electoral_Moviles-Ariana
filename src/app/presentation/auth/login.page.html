@@ -1,61 +1,119 @@
 <ion-content class="ce-auth ce-login">
-  <app-electoral-brand></app-electoral-brand>
-  <main class="ce-auth-card">
-    @if (mensajeError()) {
-    <p role="alert">{{ mensajeError() }}</p>
-    } @if (perfil(); as usuario) {
-    <h1>Sesión iniciada</h1>
-    <p>{{ usuario.nombres }} {{ usuario.apellidos }}</p>
-    <p>Rol: {{ usuario.rol }}</p>
+  <div class="ce-login-shell">
+    <header class="ce-login-hero">
+      <p class="ce-login-brand">Control Electoral</p>
+      <svg class="ce-vote-scene" viewBox="0 0 360 174" fill="none" aria-hidden="true">
+        <defs>
+          <clipPath id="ce-vote-slot">
+            <path d="M0 0h360v117H0z" />
+          </clipPath>
+        </defs>
+        <circle cx="246" cy="81" r="62" fill="#DDF2F0" />
+        <circle cx="278" cy="37" r="7" fill="#83DCD0" />
+        <path d="M27 160h306" stroke="#83DCD0" stroke-width="2" stroke-linecap="round" />
+        <path d="m64 113-2 46h22l9-40 9 40h20l-4-46" fill="#123B5D" />
+        <path d="M63 160h23m12 0h27" stroke="#123B5D" stroke-width="5" stroke-linecap="round" />
+        <path d="M84 63c-15 3-22 21-22 55h60c-2-30-10-48-25-55z" fill="#0D7873" />
+        <path d="M84 65v-9h13v9l-6 5z" fill="#A96243" />
+        <path d="M76 41c0-12 8-20 20-19 13 1 18 10 15 21l-5 4c-1 8-6 12-12 12-10 0-18-6-18-18z" fill="#C88760" />
+        <path d="M77 44c-8-7-7-26 7-29 9-2 15 4 25 0 5 13-6 16-16 16h-8l-2 13z" fill="#123B5D" />
+        <path d="m70 81-14 28 9 13" stroke="#0D7873" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="m190 124 12-15h54l13 15z" fill="#83DCD0" stroke="#123B5D" stroke-width="2" stroke-linejoin="round" />
+        <g clip-path="url(#ce-vote-slot)">
+          <g class="ce-vote-ballot">
+            <rect
+              x="199"
+              y="65"
+              width="22"
+              height="29"
+              rx="3"
+              transform="rotate(-11 210 79)"
+              fill="#fff"
+              stroke="#0D7873"
+              stroke-width="2"
+            />
+            <path
+              d="m204 79 4 3 7-8"
+              stroke="#0D7873"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </g>
+        </g>
+        <g class="ce-vote-arm">
+          <path
+            d="m104 81 43 12 49-11"
+            stroke="#0D7873"
+            stroke-width="15"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path d="m194 82 10-2" stroke="#C88760" stroke-width="9" stroke-linecap="round" />
+        </g>
 
-    @if (usuario.rol === 'recinto' || usuario.rol === 'veedor') { @if (!usuario.recinto_id) { @if (!mensajeError()) {
-    <p role="alert">Tu cuenta no tiene un recinto asignado.</p>
-    } } @else if (!usuario.correo_verificado || usuario.debe_cambiar_clave) {
-    <ion-button type="button" routerLink="/activar-cuenta"> Activar cuenta </ion-button>
-    } @else if (usuario.rol === 'recinto') {
-    <ion-button type="button" routerLink="/recinto"> Ir a mi recinto </ion-button>
-    } @else {
-    <ion-button type="button" routerLink="/veedor"> Ir al panel de veedor </ion-button>
-    } } @else if (usuario.rol === 'provincial') { @if (usuario.debe_cambiar_clave) {
-    <ion-button type="button" routerLink="/cambiar-clave"> Cambiar contraseña </ion-button>
-    } @else {
-    <ion-button type="button" routerLink="/provincial"> Ir al panel provincial </ion-button>
-    } } } @else {
-    <h1>Iniciar sesión</h1>
+        <path d="M190 124h79v32a4 4 0 0 1-4 4h-71a4 4 0 0 1-4-4z" fill="#123B5D" />
+        <path d="M211 117h35m-28 22h23" stroke="#0D7873" stroke-width="3" stroke-linecap="round" />
+        <path d="M222 147h15" stroke="#83DCD0" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </header>
+    <main class="ce-auth-card">
+      @if (mensajeError()) {
+      <p role="alert">{{ mensajeError() }}</p>
+      } @if (perfil(); as usuario) {
+      <h1>Sesión iniciada</h1>
+      <p>{{ usuario.nombres }} {{ usuario.apellidos }}</p>
+      <p>Rol: {{ usuario.rol }}</p>
 
-    <form [formGroup]="form" (ngSubmit)="ingresar()">
-      <ion-input
-        label="Cédula"
-        labelPlacement="stacked"
-        type="text"
-        inputmode="numeric"
-        autocomplete="username"
-        maxlength="10"
-        formControlName="cedula"
-      ></ion-input>
+      @if (usuario.rol === 'recinto' || usuario.rol === 'veedor') { @if (!usuario.recinto_id) { @if (!mensajeError()) {
+      <p role="alert">Tu cuenta no tiene un recinto asignado.</p>
+      } } @else if (!usuario.correo_verificado || usuario.debe_cambiar_clave) {
+      <ion-button type="button" routerLink="/activar-cuenta"> Activar cuenta </ion-button>
+      } @else if (usuario.rol === 'recinto') {
+      <ion-button type="button" routerLink="/recinto"> Ir a mi recinto </ion-button>
+      } @else {
+      <ion-button type="button" routerLink="/veedor"> Ir al panel de veedor </ion-button>
+      } } @else if (usuario.rol === 'provincial') { @if (usuario.debe_cambiar_clave) {
+      <ion-button type="button" routerLink="/cambiar-clave"> Cambiar contraseña </ion-button>
+      } @else {
+      <ion-button type="button" routerLink="/provincial"> Ir al panel provincial </ion-button>
+      } } } @else {
+      <h1>Iniciar sesión</h1>
 
-      @if (form.controls.cedula.touched && form.controls.cedula.invalid) {
-      <p role="alert">Ingresa una cédula de 10 dígitos.</p>
+      <form [formGroup]="form" (ngSubmit)="ingresar()">
+        <ion-input
+          label="Cédula"
+          labelPlacement="stacked"
+          type="text"
+          inputmode="numeric"
+          autocomplete="username"
+          maxlength="10"
+          formControlName="cedula"
+        ></ion-input>
+
+        @if (form.controls.cedula.touched && form.controls.cedula.invalid) {
+        <p role="alert">Ingresa una cédula de 10 dígitos.</p>
+        }
+
+        <ion-input
+          label="Contraseña"
+          labelPlacement="stacked"
+          type="password"
+          autocomplete="current-password"
+          formControlName="password"
+        ></ion-input>
+
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+        <p role="alert">Ingresa tu contraseña.</p>
+        }
+
+        <ion-button expand="block" type="submit" [disabled]="cargando()">
+          {{ cargando() ? 'Verificando…' : 'Ingresar' }}
+        </ion-button>
+      </form>
+
+      <a routerLink="/recuperar-clave">¿Olvidaste tu contraseña?</a>
       }
-
-      <ion-input
-        label="Contraseña"
-        labelPlacement="stacked"
-        type="password"
-        autocomplete="current-password"
-        formControlName="password"
-      ></ion-input>
-
-      @if (form.controls.password.touched && form.controls.password.invalid) {
-      <p role="alert">Ingresa tu contraseña.</p>
-      }
-
-      <ion-button expand="block" type="submit" [disabled]="cargando()">
-        {{ cargando() ? 'Verificando…' : 'Ingresar' }}
-      </ion-button>
-    </form>
-
-    <a routerLink="/recuperar-clave">¿Olvidaste tu contraseña?</a>
-    }
-  </main>
+    </main>
+  </div>
 </ion-content>
