@@ -80,18 +80,22 @@ import { CrearCoordinadorComponent } from './crear-coordinador.component';
                   );
                   track estado.numero
                 ) {
-                  <ion-item>
+                  <ion-item class="ce-junta-item">
                     <strong class="ce-junta" slot="start"><small>Junta</small>{{ estado.numero }}</strong>
                     <div class="ce-state-group">
                       @for (d of dignidades; track d.id) {
                         @let reportada = d.id === 'alcaldia' ? estado.alcaldia_reportada : estado.prefectura_reportada;
                         @if (reportada) {
-                          <ion-button fill="clear" size="small" (click)="abrirDetalle(estado.numero, d.id)">
-                            {{ d.nombre }} <ion-badge class="ce-reported">Reportada</ion-badge>
-                          </ion-button>
+                          <button
+                            type="button"
+                            class="ce-state-row ce-state-action"
+                            (click)="abrirDetalle(estado.numero, d.id)"
+                          >
+                            <span>{{ d.nombre }}</span><ion-badge class="ce-reported">Reportada</ion-badge>
+                          </button>
                         } @else {
-                          <div class="ce-state-static">
-                            {{ d.nombre }} <ion-badge class="ce-pending">Pendiente</ion-badge>
+                          <div class="ce-state-row">
+                            <span>{{ d.nombre }}</span> <ion-badge class="ce-pending">Pendiente</ion-badge>
                           </div>
                         }
                       }
@@ -119,6 +123,7 @@ import { CrearCoordinadorComponent } from './crear-coordinador.component';
     </ion-content>
     <app-panel-modal
       titulo="Crear veedor"
+      [compacto]="true"
       [abierto]="veedorAbierto()"
       [hayCambios]="veedorSinGuardar"
       [bloqueado]="veedorForm()?.guardando() ?? false"
@@ -186,6 +191,7 @@ import { CrearCoordinadorComponent } from './crear-coordinador.component';
                 @if (urlFoto(); as url) {
                   <p>
                     <img
+                      class="ce-photo-preview"
                       [src]="url"
                       alt="Foto del acta electoral"
                       width="300"

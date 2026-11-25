@@ -100,6 +100,7 @@ import { ResumenProvincialComponent } from './resumen-provincial.component';
     </ion-content>
     <app-panel-modal
       titulo="Registrar recinto"
+      [compacto]="true"
       [abierto]="gestion() === 'recinto'"
       [hayCambios]="recintoSinGuardar"
       [bloqueado]="guardando()"
@@ -123,7 +124,7 @@ import { ResumenProvincialComponent } from './resumen-provincial.component';
         </ion-select>
 
         <ion-input
-          label="Cantidad de juntas receptoras del voto"
+          label="Cantidad de juntas (JRV)"
           labelPlacement="stacked"
           type="number"
           inputmode="numeric"
@@ -148,6 +149,7 @@ import { ResumenProvincialComponent } from './resumen-provincial.component';
     </app-panel-modal>
     <app-panel-modal
       titulo="Crear coordinador"
+      [compacto]="true"
       [abierto]="gestion() === 'coordinador'"
       [hayCambios]="coordinadorSinGuardar"
       [bloqueado]="coordinadorForm()?.guardando() ?? false"

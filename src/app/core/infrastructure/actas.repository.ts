@@ -1,5 +1,5 @@
 import type { Dignidad } from './candidaturas.repository';
-import type { FotoActa, obtenerUbicacionActa } from './evidencia-acta';
+import { LIMITE_FOTO_ACTA, type FotoActa, type obtenerUbicacionActa } from './evidencia-acta';
 import { supabase } from './supabase.client';
 
 interface VotoActa {
@@ -81,10 +81,7 @@ export async function consultarEstadoActasRecinto(): Promise<EstadoActasJunta[]>
   return data ?? [];
 }
 
-export async function consultarDetalleActaRecinto(
-  numero: number,
-  dignidad: Dignidad,
-): Promise<DetalleActaRecinto> {
+export async function consultarDetalleActaRecinto(numero: number, dignidad: Dignidad): Promise<DetalleActaRecinto> {
   const { data, error } = await supabase.rpc('consultar_detalle_acta_recinto', {
     p_numero: numero,
     p_dignidad: dignidad,
@@ -102,9 +99,7 @@ export async function consultarDetalleActaRecinto(
 }
 
 export async function obtenerUrlFotoActa(ruta: string): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from('evidencias-actas')
-    .createSignedUrl(ruta, 60);
+  const { data, error } = await supabase.storage.from('evidencias-actas').createSignedUrl(ruta, 60);
 
   if (error || !data?.signedUrl) {
     throw new Error('No se pudo abrir la foto del acta. Intenta de nuevo.');
@@ -113,9 +108,7 @@ export async function obtenerUrlFotoActa(ruta: string): Promise<string> {
   return data.signedUrl;
 }
 
-export async function corregirActaRecinto(
-  correccion: CorreccionActa,
-): Promise<void> {
+export async function corregirActaRecinto(correccion: CorreccionActa): Promise<void> {
   const ruta = correccion.foto ? await subirFotoActa(correccion.foto) : null;
 
   const { error } = await supabase.rpc('corregir_acta_recinto', {
@@ -142,29 +135,17 @@ async function subirFotoActa(evidencia: FotoActa): Promise<string> {
     throw new Error('Vuelve a iniciar sesión para subir la foto.');
   }
 
-  const respuesta = await fetch(evidencia.ruta);
+  const foto = evidencia.archivo;
 
-  if (!respuesta.ok) {
-    throw new Error('No se pudo leer la foto. Tómala de nuevo.');
+  if (foto.type !== 'image/jpeg' || foto.size === 0 || foto.size > LIMITE_FOTO_ACTA) {
+    throw new Error('No se pudo preparar una foto válida. Tómala de nuevo.');
   }
 
-  const foto = await respuesta.blob();
-  const tipo = foto.type || 'image/jpeg';
-
-  if (foto.size === 0 || foto.size > 5 * 1024 * 1024) {
-    throw new Error('La foto debe pesar entre 1 byte y 5 MB. Tómala de nuevo.');
-  }
-
-  if (tipo !== 'image/jpeg' && tipo !== 'image/png') {
-    throw new Error('La foto debe estar en formato JPEG o PNG.');
-  }
-
-  const extension = tipo === 'image/png' ? 'png' : 'jpg';
-  const ruta = `${data.user.id}/${crypto.randomUUID()}.${extension}`;
+  const ruta = `${data.user.id}/${crypto.randomUUID()}.jpg`;
 
   const { error } = await supabase.storage
     .from('evidencias-actas')
-    .upload(ruta, foto, { contentType: tipo, upsert: false });
+    .upload(ruta, foto, { contentType: foto.type, upsert: false });
 
   if (error) {
     throw new Error(`No se pudo subir la foto: ${error.message}`);

@@ -103,7 +103,7 @@ interface CandidaturaActa {
 
             @if (foto(); as evidencia) {
               <p>Foto aceptada. Nitidez: {{ evidencia.nitidez.toFixed(1) }}</p>
-              <img [src]="evidencia.ruta" alt="Vista previa del acta aceptada" width="240" />
+              <img class="ce-photo-preview" [src]="evidencia.ruta" alt="Vista previa del acta aceptada" width="240" />
             }
           </section>
           <section class="ce-acta-block" [hidden]="paso() !== 1">
@@ -153,7 +153,7 @@ interface CandidaturaActa {
               </li>
             </ul>
             @if (foto(); as evidencia) {
-              <img [src]="evidencia.ruta" alt="Vista previa del acta" width="160" />
+              <img class="ce-photo-preview" [src]="evidencia.ruta" alt="Vista previa del acta" width="160" />
               <p>Nitidez: {{ evidencia.nitidez.toFixed(1) }}</p>
             }
             @if (ubicacion(); as gps) {

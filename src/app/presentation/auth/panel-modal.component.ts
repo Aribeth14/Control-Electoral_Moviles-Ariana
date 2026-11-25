@@ -21,7 +21,7 @@ import { PanelHeaderComponent } from './panel-header.component';
           [antesDeNavegar]="cerrarPorSalida"
         ></app-panel-header>
         <ion-content class="ce-panel">
-          <div class="ce-main ce-modal-body">
+          <div class="ce-main ce-modal-body" [class.ce-modal-compact]="compacto()">
             <ion-button class="ce-modal-close" fill="outline" type="button" [disabled]="bloqueado()" (click)="cerrar()"
               >Cerrar</ion-button
             >
@@ -39,6 +39,7 @@ export class PanelModalComponent {
   readonly titulo = input.required<string>();
   readonly hayCambios = input<() => boolean>(() => false);
   readonly bloqueado = input(false);
+  readonly compacto = input(false);
   readonly cerrado = output<void>();
 
   readonly puedeCerrar = async (_datos?: unknown, rol?: string): Promise<boolean> =>

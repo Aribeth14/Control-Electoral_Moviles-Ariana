@@ -93,7 +93,7 @@ import { tomarFotoActa, type FotoActa } from '../../core/infrastructure/evidenci
           }
           @if (foto(); as evidencia) {
             <p>Foto nueva aceptada. Nitidez {{ evidencia.nitidez.toFixed(1) }}.</p>
-            <img [src]="evidencia.ruta" alt="Foto nueva del acta" width="240" />
+            <img class="ce-photo-preview" [src]="evidencia.ruta" alt="Foto nueva del acta" width="240" />
           }
         </section>
         <section class="ce-acta-block" [hidden]="paso() !== 2" aria-label="Revisar corrección">
@@ -119,7 +119,7 @@ import { tomarFotoActa, type FotoActa } from '../../core/infrastructure/evidenci
             <p>Motivo: {{ datos.motivo }}</p>
           }
           @if (foto(); as evidencia) {
-            <img [src]="evidencia.ruta" alt="Vista previa de la foto nueva" width="160" />
+            <img class="ce-photo-preview" [src]="evidencia.ruta" alt="Vista previa de la foto nueva" width="160" />
             <p>Nitidez: {{ evidencia.nitidez.toFixed(1) }}</p>
           } @else {
             <p>Se conserva la foto existente.</p>
